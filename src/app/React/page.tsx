@@ -1,6 +1,6 @@
 // pages/index.tsx
 'use client';
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import Prism from "prismjs";
 import "prismjs/themes/prism-okaidia.css"; // Optional: Add a Prism theme
 
