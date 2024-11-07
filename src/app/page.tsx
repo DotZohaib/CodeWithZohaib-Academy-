@@ -113,17 +113,16 @@ export default function HomePage() {
                   onClick={handleBuyNow}
                   className="relative inline-block px-3 py-1 md:px-8 md:py-3 font-semibold bg-pink-700 text-white rounded-lg"
                 >
-                  <span className="absolute top-0 left-0 w-full h-full bg-white opacity-10 rounded-lg"></span>
+                  <span className="absolute top-0  left-0 w-full h-full bg-white opacity-10 rounded-lg"></span>
                   <span className="relative  z-10">My PortFolio</span>
                 </Link>
-
-                <Link
+                  <Link
                   href="/Html"
                   onClick={handleAddToCart}
                   className="relative inline-block px-3 py-1 md:px-8 md:py-3 font-semibold text-pink-700 border-pink-700 border bg-white rounded-lg"
                 >
-                  <span className="absolute top-0 left-0 w-full h-full bg-white opacity-10 rounded-lg"></span>
-                  <span className="relative z-10">Get Started</span>
+                  <span className="absolute  top-0 left-0 w-full h-full bg-white opacity-10 rounded-lg"></span>
+                  <span className="relative  z-10">Get Started</span>
                 </Link>
               </div>
             </motion.div>
