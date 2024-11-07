@@ -7,11 +7,19 @@ const Chatbot = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState([]);
   const [userInput, setUserInput] = useState('');
-  const [userName, setUserName] = useState(localStorage.getItem('userName') || '');
+  const [userName, setUserName] = useState('');
   const [isTyping, setIsTyping] = useState(false);
-  const [showNameInput, setShowNameInput] = useState(!userName);
+  const [showNameInput, setShowNameInput] = useState(true);
   const [unreadCount, setUnreadCount] = useState(0);
   const messagesEndRef = useRef(null);
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const storedUserName = localStorage.getItem('userName') || '';
+      setUserName(storedUserName);
+      setShowNameInput(!storedUserName);
+    }
+  }, []);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -32,6 +40,18 @@ const Chatbot = () => {
       }, 1000);
     }
   }, [userName]);
+
+  // Simulate new message notification when closed
+  useEffect(() => {
+    if (!isOpen) {
+      const timer = setInterval(() => {
+        if (Math.random() < 0.3) { // 30% chance every 30 seconds
+          setUnreadCount(prev => prev + 1);
+        }
+      }, 30000);
+      return () => clearInterval(timer);
+    }
+  }, [isOpen]);
 
   // Simulate new message notification when closed
   useEffect(() => {
