@@ -805,7 +805,7 @@ div {
     Prism.highlightAll();
   }, []);
 
-  const handleCopy = (text, index) => {
+  const handleCopy = (text: any, index: any) => {
     navigator.clipboard.writeText(text);
     setCopiedIndex(index);
     setTimeout(() => setCopiedIndex(null), 2000);
