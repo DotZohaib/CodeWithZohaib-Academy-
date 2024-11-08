@@ -361,7 +361,7 @@ const Chatbot = () => {
           {/* Chat Content */}
           <div className="flex-1 overflow-y-auto w-full p-4 bg-gray-50">
             {showNameInput ? (
-              <div className="flex flex-col items-center justify-center h-full gap-4 p-4">
+              <div className="flex flex-col items-center justify-center h-full gap-4 w-full  ">
                 <Bot size={48} className="text-blue-600" />
                 <h2 className="text-xl font-semibold text-gray-800">Welcome! 👋</h2>
                 <p className="text-gray-600 text-center">Please enter your name to start chatting</p>
