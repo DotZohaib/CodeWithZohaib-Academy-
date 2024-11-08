@@ -365,7 +365,7 @@ const Chatbot = () => {
                 <Bot size={48} className="text-blue-600" />
                 <h2 className="text-xl font-semibold text-gray-800">Welcome! 👋</h2>
                 <p className="text-gray-600 text-center">Please enter your name</p>
-                <div className="w-full max-w-xs gap-2">
+                <div className="w-full max-w-xs flex flex-col items-center justify-center gap-2">
                   <input
                     type="text"
                     value={userInput}
