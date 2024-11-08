@@ -287,7 +287,7 @@ const Boxes = () => {
       },
       {
         id: 17,
-        image: "/c++.png",
+        image: "/C++.png",
         name: 'C++ - Object-Oriented Programming Powerhouse',
         des: 'C++ is an extension of C that includes object-oriented features. It is widely used for systems programming, game development, and applications requiring high performance.',
         link: '/Cc',
