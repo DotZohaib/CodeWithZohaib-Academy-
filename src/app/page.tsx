@@ -107,7 +107,7 @@ export default function HomePage() {
                 <span className="font-bold text-pink-700" id="element"></span>
                 <span className="typed-cursor typed-cursor--blink">|</span>
               </h4>
-              <div className="flex space-x-4">
+              <div className="flex place-items-center space-x-4">
                 <Link
                   href="https://dot-zohaib-code.vercel.app/"
                   onClick={handleBuyNow}
