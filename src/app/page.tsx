@@ -107,24 +107,25 @@ export default function HomePage() {
                 <span className="font-bold text-pink-700" id="element"></span>
                 <span className="typed-cursor typed-cursor--blink">|</span>
               </h4>
-              <div className="flex items-center space-x-4">
-                <Link
-                  href="https://dot-zohaib-code.vercel.app/"
-                  onClick={handleBuyNow}
-                  className="relative inline-block px-7 py-2 md:px-8 md:py-3 font-semibold bg-pink-700 text-white rounded-lg"
-                >
-                  <span className="absolute top-0  left-0 w-full h-full bg-white opacity-10 rounded-lg"></span>
-                  <span className="relative  z-10">My PortFolio</span>
-                </Link>
-                  <Link
-                  href="/Html"
-                  onClick={handleAddToCart}
-                  className="relative inline-block px-7 py-2 md:px-8 md:py-3 font-semibold text-pink-700 border-pink-700 border bg-white rounded-lg"
-                >
-                  <span className="absolute  top-0 left-0 w-full h-full bg-white opacity-10 rounded-lg"></span>
-                  <span className="relative  z-10">Get Started</span>
-                </Link>
-              </div>
+             <div className="flex flex-wrap items-center justify-center md:justify-start space-x-0 md:space-x-4">
+  <Link
+    href="https://dot-zohaib-code.vercel.app/"
+    onClick={handleBuyNow}
+    className="relative inline-block px-7 py-2 md:px-8 md:py-3 font-semibold bg-pink-700 text-white rounded-lg m-2"
+  >
+    <span className="absolute top-0 left-0 w-full h-full bg-white opacity-10 rounded-lg"></span>
+    <span className="relative z-10">My Portfolio</span>
+  </Link>
+  <Link
+    href="/Html"
+    onClick={handleAddToCart}
+    className="relative inline-block px-7 py-2 md:px-8 md:py-3 font-semibold text-pink-700 border-pink-700 border bg-white rounded-lg m-2"
+  >
+    <span className="absolute top-0 left-0 w-full h-full bg-white opacity-10 rounded-lg"></span>
+    <span className="relative z-10">Get Started</span>
+  </Link>
+</div>
+
             </motion.div>
             <div className="logo ml-0 md:ml-6 mb-8 md:mb-0 ">
               <Image
