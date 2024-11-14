@@ -196,12 +196,19 @@ const Sql: React.FC = () => {
         code: `ALTER TABLE employees ADD birth_date DATE;`
       },
       {
-        id: 26,
-        Title: "26. How does the UNION operator work?",
-        answer: "UNION combines the results of two or more SELECT queries without duplicates.",
-        Sample: "SELECT column1 FROM table1 UNION SELECT column1 FROM table2;",
-        code: ``
-      },
+    id: 26,
+    Title: "26. How does the UNION operator work?",
+    answer: "UNION combines the results of two or more SELECT queries without duplicates.",
+    Sample: "How do I combine results from two tables without duplicates?",
+    code: `
+    SELECT column_name(s)
+    FROM table1
+    UNION
+    SELECT column_name(s)
+    FROM table2;
+    `
+},
+
      {
     id: 27,
     Title: "27. What does UNION ALL do?",
