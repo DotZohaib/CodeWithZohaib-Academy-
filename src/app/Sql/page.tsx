@@ -326,7 +326,91 @@ const Sql: React.FC = () => {
         answer: "An index is used to speed up searches and queries on a table, and it is created on columns that are frequently searched.",
         Sample: "CREATE INDEX index_name ON table_name(column);",
         code: `CREATE INDEX idx_salary ON employees(salary);`
-      }
+      },
+     {
+    id: 41,
+    Title: "41. What is a JOIN expression in SQL?",
+    answer: "JOIN is used to combine rows from two or more tables based on a related column.",
+    Sample: "SELECT columns FROM table1 JOIN table2 ON table1.column = table2.column;",
+    code: `SELECT employees.name, departments.dept_name FROM employees JOIN departments ON employees.dept_id = departments.id;`
+  },
+  {
+    id: 42,
+    Title: "42. What is a View in SQL?",
+    answer: "A view is a virtual table created by a query, which can simplify complex queries and enhance security.",
+    Sample: "CREATE VIEW view_name AS SELECT columns FROM table_name;",
+    code: `CREATE VIEW high_salary AS SELECT name, salary FROM employees WHERE salary > 50000;`
+  },
+  {
+    id: 43,
+    Title: "43. What is a Transaction in SQL?",
+    answer: "A transaction is a sequence of operations performed as a single logical unit of work, ensuring data integrity.",
+    Sample: "BEGIN TRANSACTION; SQL statements; COMMIT;",
+    code: `BEGIN TRANSACTION;
+INSERT INTO accounts (user, balance) VALUES ('John', 1000);
+COMMIT;`
+  },
+  {
+    id: 44,
+    Title: "44. What are Integrity Constraints?",
+    answer: "Integrity constraints enforce rules at the table level to ensure data accuracy and consistency.",
+    Sample: "CREATE TABLE table_name (column datatype CONSTRAINT);",
+    code: `CREATE TABLE employees (
+      id INT PRIMARY KEY,
+      name VARCHAR(50) NOT NULL,
+      salary DECIMAL(10, 2) CHECK (salary > 0)
+    );`
+  },
+  {
+    id: 45,
+    Title: "45. What are SQL Data Types and Schemas?",
+    answer: "SQL data types define the nature of data stored in each column, and schemas organize objects in a database.",
+    Sample: "CREATE SCHEMA schema_name;",
+    code: `CREATE SCHEMA sales;
+CREATE TABLE sales.orders (
+  order_id INT PRIMARY KEY,
+  customer_name VARCHAR(100)
+);`
+  },
+  {
+    id: 46,
+    Title: "46. How is an Index defined in SQL?",
+    answer: "An index is created to improve the speed of data retrieval on a specific column or set of columns.",
+    Sample: "CREATE INDEX index_name ON table_name(column);",
+    code: `CREATE INDEX idx_lastname ON employees(last_name);`
+  },
+  {
+    id: 47,
+    Title: "47. What is Authorization in SQL?",
+    answer: "Authorization grants or restricts users' access to database resources and actions.",
+    Sample: "GRANT privileges ON object TO user;",
+    code: `GRANT SELECT ON employees TO user1;`
+  },
+  {
+    id: 48,
+    Title: "48. What is the SQL Query Language Overview?",
+    answer: "SQL is a language used to interact with relational databases through data definition, manipulation, and control commands.",
+    Sample: "Basic SQL Commands: SELECT, INSERT, UPDATE, DELETE;",
+    code: `SELECT * FROM employees;
+INSERT INTO employees (name, salary) VALUES ('Alice', 55000);`
+  },
+  {
+    id: 49,
+    Title: "49. What is SQL Data Definition?",
+    answer: "SQL Data Definition Language (DDL) manages the structure of database objects such as tables and indexes.",
+    Sample: "CREATE, ALTER, DROP statements;",
+    code: `CREATE TABLE employees (
+      id INT PRIMARY KEY,
+      name VARCHAR(100)
+    );`
+  },
+  {
+    id: 50,
+    Title: "50. What is the Basic Query Structure of SQL Queries?",
+    answer: "A basic SQL query structure includes SELECT, FROM, and optional WHERE clauses to filter results.",
+    Sample: "SELECT columns FROM table WHERE condition;",
+    code: `SELECT name, age FROM users WHERE age > 30;`
+  }
   ];
   
 
