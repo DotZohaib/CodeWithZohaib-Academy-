@@ -149,13 +149,17 @@ const Sql: React.FC = () => {
         Sample: "SELECT a.column, b.column FROM table_name a, table_name b WHERE a.column = b.column;",
         code: `SELECT a.name, b.name FROM employees a, employees b WHERE a.manager_id = b.id;`
       },
-      {
-        id: 20,
-        Title: "20. What are aggregate functions?",
-        answer: "Aggregate functions perform calculations on a set of values and return a single result, such as SUM, AVG, COUNT.",
-        Sample: "",
-        code: ``
-      },
+    {
+    id: 20,
+    Title: "20. What are aggregate functions?",
+    answer: "Aggregate functions perform calculations on a set of values and return a single result, such as SUM, AVG, COUNT.",
+    Sample: "How do I find the average value in a SQL table?",
+    code: `
+    SELECT AVG(column_name)
+    FROM table_name;
+    `
+},
+
       {
         id: 21,
         Title: "21. What is the function of IS NULL?",
@@ -198,13 +202,20 @@ const Sql: React.FC = () => {
         Sample: "SELECT column1 FROM table1 UNION SELECT column1 FROM table2;",
         code: ``
       },
-      {
-        id: 27,
-        Title: "27. What does UNION ALL do?",
-        answer: "UNION ALL combines the results of two or more SELECT queries, including duplicates.",
-        Sample: "",
-        code: ``
-      },
+     {
+    id: 27,
+    Title: "27. What does UNION ALL do?",
+    answer: "UNION ALL combines the results of two or more SELECT queries, including duplicates.",
+    Sample: "How can I combine two tables and keep all duplicate records?",
+    code: `
+    SELECT column_name(s)
+    FROM table1
+    UNION ALL
+    SELECT column_name(s)
+    FROM table2;
+    `
+},
+
       {
         id: 28,
         Title: "28. How does the EXISTS keyword work?",
@@ -254,20 +265,33 @@ const Sql: React.FC = () => {
         Sample: "SELECT MIN(column) FROM table_name;",
         code: `SELECT MIN(salary) FROM employees;`
       },
-      {
-        id: 35,
-        Title: "35. What is a primary key?",
-        answer: "A primary key uniquely identifies each record in a table and must contain unique values.",
-        Sample: "CREATE TABLE table_name (id INT PRIMARY KEY, ...);",
-        code: ``
-      },
-      {
-        id: 36,
-        Title: "36. What is a foreign key?",
-        answer: "A foreign key is a field or collection of fields in one table that uniquely identifies a row in another table, creating a link between the two tables.",
-        Sample: "FOREIGN KEY (column) REFERENCES other_table(column);",
-        code: ``
-      },
+     {
+    id: 35,
+    Title: "35. What is a primary key?",
+    answer: "A primary key uniquely identifies each record in a table and must contain unique values.",
+    Sample: "How do I create a primary key in a table?",
+    code: `
+    CREATE TABLE table_name (
+        id INT PRIMARY KEY,
+        column_name data_type,
+        ...
+    );
+    `
+},
+{
+    id: 36,
+    Title: "36. What is a foreign key?",
+    answer: "A foreign key is a field or collection of fields in one table that uniquely identifies a row in another table, creating a link between the two tables.",
+    Sample: "How do I create a foreign key in SQL?",
+    code: `
+    CREATE TABLE table_name (
+        column_name data_type,
+        other_column INT,
+        FOREIGN KEY (other_column) REFERENCES other_table(column)
+    );
+    `
+},
+
       {
         id: 37,
         Title: "37. What is a subquery?",
