@@ -129,7 +129,7 @@ export default function HomePage() {
             </motion.div>
             <div className="logo ml-0 md:ml-6 mb-8 md:mb-0 ">
               <Image
-                src="WhatsApp Image 2024-12-22 at 23.01.17_a3e3df0b.jpg"
+                src="bgz.jpg"
                 alt="Logo"
                 width={600}
                 height={400}
