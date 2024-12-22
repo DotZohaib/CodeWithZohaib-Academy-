@@ -129,7 +129,7 @@ export default function HomePage() {
             </motion.div>
             <div className="logo ml-0 md:ml-6 mb-8 md:mb-0 ">
               <Image
-                src="bgz.jpg"
+                src="Facehfjdh.png"
                 alt="Logo"
                 width={600}
                 height={400}
