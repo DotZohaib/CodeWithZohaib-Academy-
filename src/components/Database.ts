@@ -9919,7 +9919,7 @@ constructor(password: string) {
     Sample: "Sending an email notification after a user registers.",
     code: `@receiver(post_save, sender=User)`
   },
-     {
+      {
       id: 1351,
       Title: "What is Next.js?",
       answer: "Next.js is a React framework that enables features like server-side rendering, static site generation, and API routes.",
@@ -9931,8 +9931,7 @@ constructor(password: string) {
         <h1>Welcome to Next.js!</h1>
       </div>
     )
-  }`,
-      category: 'components'
+  }`
     },
     {
       id: 1352,
@@ -9943,8 +9942,7 @@ constructor(password: string) {
   export default function Post({ params }) {
     const { id } = params;
     return <h1>Post: {id}</h1>
-  }`,
-      category: 'routing'
+  }`
     },
     {
       id: 1353,
@@ -9974,8 +9972,7 @@ constructor(password: string) {
         ))}
       </ul>
     );
-  }`,
-      category: 'data fetching'
+  }`
     },
     {
       id: 1354,
@@ -9993,8 +9990,7 @@ constructor(password: string) {
         height={300}
       />
     );
-  }`,
-      category: 'optimization'
+  }`
     },
     {
       id: 1355,
@@ -10009,8 +10005,7 @@ constructor(password: string) {
         <Link href="/about">About</Link>
       </nav>
     );
-  }`,
-      category: 'routing'
+  }`
     },
     {
       id: 1356,
@@ -10034,8 +10029,7 @@ constructor(password: string) {
   // pages/example.tsx
   export default function Example() {
     return <div>{process.env.NEXT_PUBLIC_API_URL}</div>;
-  }`,
-      category: 'environment'
+  }`
     },
     {
       id: 1358,
@@ -10058,8 +10052,7 @@ constructor(password: string) {
   
   export function useAppContext() {
     return useContext(AppContext);
-  }`,
-      category: 'state management'
+  }`
     },
     {
       id: 1359,
@@ -10067,8 +10060,7 @@ constructor(password: string) {
       answer: "Next.js apps can be deployed on platforms like Vercel, Netlify, or any Node.js-compatible server.",
       Sample: "Deploying on Vercel",
       code: `// Simply push your Next.js project to GitHub and import it into Vercel.
-  vercel --prod`,
-      category: 'deployment'
+  vercel --prod`
     },
     {
       id: 1360,
@@ -10084,8 +10076,7 @@ constructor(password: string) {
         <meta name="description" content="A Next.js application" />
       </Head>
     );
-  }`,
-      category: 'seo'
+  }`
     },
     {
       id: 1361,
@@ -10101,8 +10092,7 @@ constructor(password: string) {
   
   export default function StaticPage({ message }) {
     return <div>{message}</div>;
-  }`,
-      category: 'data fetching'
+  }`
     },
     {
       id: 1362,
@@ -10112,8 +10102,7 @@ constructor(password: string) {
       code: `// pages/404.tsx
   export default function Custom404() {
     return <h1>404 - Page Not Found</h1>;
-  }`,
-      category: 'error handling'
+  }`
     },
     {
       id: 1363,
@@ -10129,8 +10118,7 @@ constructor(password: string) {
   
   export default function SSRPage({ message }) {
     return <div>{message}</div>;
-  }`,
-      category: 'data fetching'
+  }`
     },
     {
       id: 1364,
@@ -10146,8 +10134,7 @@ constructor(password: string) {
       return NextResponse.redirect(new URL('/login', url));
     }
     return NextResponse.next();
-  }`,
-      category: 'middleware'
+  }`
     },
     {
       id: 1365,
@@ -10165,8 +10152,7 @@ constructor(password: string) {
   // pages/example.tsx
   export default function Example({ message }: { message: string }) {
     return <div>{message}</div>;
-  }`,
-      category: 'typescript'
+  }`
     },
     {
       id: 1366,
@@ -10187,8 +10173,7 @@ constructor(password: string) {
         <Component {...pageProps} />
       </Layout>
     );
-  }`,
-      category: 'layout'
+  }`
     },
     {
       id: 1367,
@@ -10205,8 +10190,7 @@ constructor(password: string) {
   
   export default function Home() {
     return <h1 className={styles.title}>Hello, Next.js!</h1>;
-  }`,
-      category: 'styling'
+  }`
     },
     {
       id: 1368,
@@ -10223,8 +10207,7 @@ constructor(password: string) {
   // pages/index.tsx
   export default function Home() {
     return <h1 className="text-3xl font-bold">Hello, Tailwind!</h1>;
-  }`,
-      category: 'styling'
+  }`
     },
     {
       id: 1369,
@@ -10241,8 +10224,7 @@ constructor(password: string) {
   
   export default function PreRender({ data }) {
     return <div>{JSON.stringify(data)}</div>;
-  }`,
-      category: 'data fetching'
+  }`
     },
     {
       id: 1370,
@@ -10261,8 +10243,7 @@ constructor(password: string) {
         },
       ];
     },
-  };`,
-      category: 'configuration'
+  };`
     },
     {
       id: 1371,
@@ -10276,8 +10257,7 @@ constructor(password: string) {
     providers: [
       // Add providers here
     ],
-  });`,
-      category: 'authentication'
+  });`
     },
     {
       id: 1372,
@@ -10296,8 +10276,7 @@ constructor(password: string) {
   test('renders homepage', () => {
     const { getByText } = render(<Home />);
     expect(getByText('Welcome to Next.js!')).toBeInTheDocument();
-  });`,
-      category: 'testing'
+  });`
     },
     {
       id: 1373,
@@ -10310,8 +10289,7 @@ constructor(password: string) {
   // pages/index.tsx
   export default function Home() {
     return <div>{process.env.NEXT_PUBLIC_API_URL}</div>;
-  }`,
-      category: 'configuration'
+  }`
     },
     {
       id: 1374,
@@ -10321,8 +10299,7 @@ constructor(password: string) {
       code: `// pages/api/hello.ts
   export default function handler(req, res) {
     res.status(200).json({ message: "Hello, API!" });
-  }`,
-      category: 'api'
+  }`
     },
     {
       id: 1375,
@@ -10336,8 +10313,7 @@ constructor(password: string) {
     const response = NextResponse.next();
     response.headers.set('X-Custom-Header', 'MyHeaderValue');
     return response;
-  }`,
-      category: 'middleware'
+  }`
     },
     {
       id: 1376,
@@ -10355,8 +10331,7 @@ constructor(password: string) {
         },
       ];
     },
-  };`,
-      category: 'routing'
+  };`
     },
     {
       id: 1377,
@@ -10378,8 +10353,7 @@ constructor(password: string) {
         </body>
       </Html>
     );
-  }`,
-      category: 'configuration'
+  }`
     },
     {
       id: 1378,
@@ -10397,8 +10371,7 @@ constructor(password: string) {
   // pages/index.tsx
   export default function Home() {
     return <h1>Welcome to Next.js!</h1>;
-  }`,
-      category: 'configuration'
+  }`
     },
     {
       id: 1379,
@@ -10412,8 +10385,7 @@ constructor(password: string) {
   
   export default function Home() {
     return <LazyComponent />;
-  }`,
-      category: 'optimization'
+  }`
     },
     {
       id: 1380,
@@ -10423,8 +10395,7 @@ constructor(password: string) {
       code: `// Install Vercel CLI
   // Run the following commands:
   npm install -g vercel
-  vercel deploy`,
-      category: 'deployment'
+  vercel deploy`
     },
     {
       id: 1381,
@@ -10434,8 +10405,7 @@ constructor(password: string) {
       code: `// next.config.js
   module.exports = {
     reactStrictMode: true,
-  };`,
-      category: 'configuration'
+  };`
     },
     {
       id: 1382,
@@ -10453,8 +10423,7 @@ constructor(password: string) {
         <Component {...pageProps} />
       </main>
     );
-  }`,
-      category: 'styling'
+  }`
     },
     {
       id: 1383,
@@ -10486,8 +10455,7 @@ constructor(password: string) {
         </body>
       </Html>
     );
-  }`,
-      category: 'analytics'
+  }`
     },
     {
       id: 1384,
@@ -10506,8 +10474,7 @@ constructor(password: string) {
     if (!data) return <div>Loading...</div>;
   
     return <div>{JSON.stringify(data)}</div>;
-  }`,
-      category: 'data fetching'
+  }`
     },
     {
       id: 1385,
@@ -10534,8 +10501,7 @@ constructor(password: string) {
         <Component {...pageProps} />
       </ApolloProvider>
     );
-  }`,
-      category: 'graphql'
+  }`
     },
     {
       id: 1386,
@@ -10559,8 +10525,7 @@ constructor(password: string) {
     return <h1>{title}</h1>;
   };
   
-  export default Header;`,
-      category: 'typescript'
+  export default Header;`
     },
     {
       id: 1387,
@@ -10570,8 +10535,7 @@ constructor(password: string) {
       code: `// pages/404.tsx
   export default function Custom404() {
     return <h1>404 - Page Not Found</h1>;
-  }`,
-      category: 'error handling'
+  }`
     },
     {
       id: 1388,
@@ -10582,8 +10546,7 @@ constructor(password: string) {
   // Access the file in your components
   export default function Home() {
     return <img src="/image.png" alt="Example" />;
-  }`,
-      category: 'configuration'
+  }`
     },
     {
       id: 1389,
@@ -10595,8 +10558,7 @@ constructor(password: string) {
   
   export default function MyApp({ Component, pageProps }) {
     return <Component {...pageProps} />;
-  }`,
-      category: 'configuration'
+  }`
     },
     {
       id: 1390,
@@ -10614,8 +10576,7 @@ constructor(password: string) {
         </Link>
       </div>
     );
-  }`,
-      category: 'optimization'
+  }`
     },
     {
       id: 1391,
@@ -10633,8 +10594,7 @@ constructor(password: string) {
         clientSecret: process.env.GITHUB_CLIENT_SECRET,
       }),
     ],
-  });`,
-      category: 'authentication'
+  });`
     },
     {
       id: 1392,
@@ -10659,8 +10619,7 @@ constructor(password: string) {
   
   export default function Post({ id }) {
     return <h1>Post ID: {id}</h1>;
-  }`,
-      category: 'data fetching'
+  }`
     },
     {
       id: 1393,
@@ -10677,8 +10636,7 @@ constructor(password: string) {
   
   export default function Home() {
     return <h1 className={styles.title}>Hello World</h1>;
-  }`,
-      category: 'styling'
+  }`
     },
     {
       id: 1394,
@@ -10699,8 +10657,7 @@ constructor(password: string) {
         <Component {...pageProps} />
       </Layout>
     );
-  }`,
-      category: 'configuration'
+  }`
     },
     {
       id: 1395,
@@ -10721,8 +10678,7 @@ constructor(password: string) {
   };
   
   // Import styles in pages/_app.tsx
-  import '../styles/globals.css';`,
-      category: 'styling'
+  import '../styles/globals.css';`
     },
 
 
