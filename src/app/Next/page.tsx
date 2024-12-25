@@ -1,6 +1,7 @@
 "use client"
 import React, { useState, useEffect } from 'react';
 import Prism from "prismjs";
+import 'prismjs/themes/prism-tomorrow.css';
 import "prismjs/themes/prism-tomorrow.css"; // Include the Prism.js theme
 import { Search, Filter, BookOpen } from 'lucide-react';
 import {
@@ -853,9 +854,10 @@ const Next = () => {
     setShowCount(prev => prev + 10);
   };
 
-    useEffect(() => { 
-    Prism.highlightAll();
-  }, []); 
+const CodeBlock = ({ item }: { item: { code: string } }) => {
+  useEffect(() => {
+    Prism.highlightAll(); // Apply syntax highlighting after component mounts
+  }, []);
 
   return (
     <div className="max-w-4xl mx-auto p-4 space-y-6">
@@ -911,9 +913,9 @@ const Next = () => {
               </div>
 
               <div className="relative">
-                <pre className="bg-gray-900 text-gray-100 p-4 rounded-lg overflow-x-auto">
-                  <code>{item.code}</code>
-                </pre>
+               <pre className="bg-gray-900 text-gray-100 p-4 rounded-lg overflow-x-auto">
+      <code className="language-javascript">{item.code}</code>
+    </pre>
                 <button
                   onClick={() => handleCopy(item.code, item.id)}
                   className="absolute top-2 right-2 bg-blue-500 text-white px-3 py-1 rounded-md hover:bg-blue-600 transition"
