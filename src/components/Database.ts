@@ -10015,8 +10015,7 @@ constructor(password: string) {
       code: `// pages/api/hello.ts
   export default function handler(req, res) {
     res.status(200).json({ message: 'Hello, world!' });
-  }`,
-      category: 'api'
+  }`
     },
     {
       id: 1357,
