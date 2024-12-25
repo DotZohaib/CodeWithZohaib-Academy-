@@ -1,6 +1,7 @@
 "use client"
 import React, { useState, useEffect } from 'react';
 import Prism from "prismjs";
+import "prismjs/themes/prism-tomorrow.css"; // Include the Prism.js theme
 import { Search, Filter, BookOpen } from 'lucide-react';
 import {
   Card,
