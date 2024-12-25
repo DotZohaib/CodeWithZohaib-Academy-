@@ -72,4 +72,91 @@ body {
 }
 
 
+/* Custom PrismJS theme with additional colors */
+
+/* Base styles for code blocks */
+pre[class*="language-"],
+code[class*="language-"] {
+  font-family: 'Fira Code', 'Consolas', monospace;
+  font-size: 1em;
+  line-height: 1.5;
+  word-wrap: normal;
+  word-break: normal;
+  white-space: pre;
+  tab-size: 4;
+  hyphens: none;
+  color: #f8f8f2;
+  background: #2d2d2d;
+}
+
+/* Custom color for different syntax elements */
+.token.comment, .token.prolog, .token.doctype, .token.cdata {
+  color: #7c7c7c; /* Gray */
+}
+
+.token.punctuation {
+  color: #f8f8f2; /* Light gray for punctuation */
+}
+
+.token.property, .token.tag, .token.constant {
+  color: #ff79c6; /* Pink */
+}
+
+.token.selector, .token.attr-name, .token.string {
+  color: #50fa7b; /* Green */
+}
+
+.token.builtin, .token.char, .token.inserted {
+  color: #8be9fd; /* Cyan */
+}
+
+.token.keyword {
+  color: #ffb86c; /* Orange/Yellow */
+}
+
+.token.operator, .token.entity, .token.url {
+  color: #f1fa8c; /* Yellow */
+}
+
+.token.atrule, .token.class-name {
+  color: #ff5555; /* Red */
+}
+
+.token.regex, .token.important {
+  color: #f4f4f4; /* White */
+}
+
+.token.variable {
+  color: #bd93f9; /* Purple */
+}
+
+.token.boolean, .token.number {
+  color: #ff79c6; /* Pink */
+}
+
+.token.function, .token.method {
+  color: #ff92d0; /* Light pink */
+}
+
+.token.class-name {
+  color: #ffb86c; /* Light yellow */
+}
+
+/* Background and borders */
+pre[class*="language-"] {
+  background: #282a36;
+  padding: 1em;
+  margin: 0.5em 0;
+  border-radius: 0.5em;
+  border: 1px solid #44475a;
+}
+
+code[class*="language-"] {
+  background: #383a59;
+  padding: 0.3em;
+  border-radius: 0.5em;
+  color: #f8f8f2;
+}
+
+
 
