@@ -1,87 +1,101 @@
-'use client'
-import React, { useState } from 'react';
-import { AlertCircle, CheckCircle, Loader2 } from 'lucide-react';
+"use client";
+import React, { useState } from "react";
+import { AlertCircle, CheckCircle, Loader2 } from "lucide-react";
 
-const Signup = () => {
-  const [formData, setFormData] = useState({
-    name: '',
-    email: '',
-    message: '', // Changed from 'pass' to 'message' for clarity
-    category: 'general',
-    priority: 'medium'
-  });
-  
-  const [isSubmitted, setIsSubmitted] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
-  const [errors, setErrors] = useState({
-    name: '',
-    email: '',
-    message: ''
+interface FormData {
+  name: string;
+  email: string;
+  message: string;
+  category: "general" | "technical" | "support" | "feedback";
+  priority: "low" | "medium" | "high";
+}
+
+interface FormErrors {
+  name: string;
+  email: string;
+  message: string;
+}
+
+const Signup: React.FC = () => {
+  const [formData, setFormData] = useState<FormData>({
+    name: "",
+    email: "",
+    message: "",
+    category: "general",
+    priority: "medium",
   });
 
-  const validateForm = () => {
+  const [isSubmitted, setIsSubmitted] = useState<boolean>(false);
+  const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [errors, setErrors] = useState<FormErrors>({
+    name: "",
+    email: "",
+    message: "",
+  });
+
+  const validateForm = (): boolean => {
     const newErrors = {
-      name: '',
-      email: '',
-      message: ''
+      name: "",
+      email: "",
+      message: "",
     };
-    
+
     if (formData.name.length < 3) {
-      newErrors.name = 'Name must be at least 3 characters';
+      newErrors.name = "Name must be at least 3 characters";
     }
-    if (!formData.email.includes('@')) {
-      newErrors.email = 'Please enter a valid email';
+    if (!formData.email.includes("@")) {
+      newErrors.email = "Please enter a valid email";
     }
     if (formData.message.length < 10) {
-      newErrors.message = 'Message must be at least 10 characters';
+      newErrors.message = "Message must be at least 10 characters";
     }
-    
+
     setErrors(newErrors);
-    return Object.values(newErrors).every(error => error === '');
+    return Object.values(newErrors).every((error) => error === "");
   };
 
-  const handleChange = (e) => {
+  const handleChange = (
+    e: React.ChangeEvent<
+      HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
+    >
+  ) => {
     const { name, value } = e.target;
-    setFormData(prevData => ({
+    setFormData((prevData) => ({
       ...prevData,
-      [name]: value
+      [name]: value,
     }));
-    
-    // Clear error when user starts typing
-    if (errors[name]) {
-      setErrors(prev => ({
+
+    if (errors[name as keyof FormErrors]) {
+      setErrors((prev) => ({
         ...prev,
-        [name]: ''
+        [name]: "",
       }));
     }
   };
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    
+
     if (!validateForm()) return;
 
     setIsLoading(true);
-    
+
     try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      localStorage.setItem('userData', JSON.stringify(formData));
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+      localStorage.setItem("userData", JSON.stringify(formData));
       setIsSubmitted(true);
-      
-      // Reset form
+
       setFormData({
-        name: '',
-        email: '',
-        message: '',
-        category: 'general',
-        priority: 'medium'
+        name: "",
+        email: "",
+        message: "",
+        category: "general",
+        priority: "medium",
       });
-      
+
       setTimeout(() => setIsSubmitted(false), 3000);
     } catch (error) {
-      console.error('Error submitting form:', error);
+      console.error("Error submitting form:", error);
     } finally {
       setIsLoading(false);
     }
@@ -93,12 +107,12 @@ const Signup = () => {
         <h1 className="text-3xl font-bold text-gray-800 mb-6 text-center">
           Add Questions
         </h1>
-        
+
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="relative">
             <input
               className={`w-full py-3 px-4 bg-gray-50 rounded-lg border ${
-                errors.name ? 'border-red-500' : 'border-gray-200'
+                errors.name ? "border-red-500" : "border-gray-200"
               } focus:outline-none focus:ring-2 focus:ring-indigo-400 transition-all duration-300`}
               type="text"
               name="name"
@@ -118,7 +132,7 @@ const Signup = () => {
           <div className="relative">
             <input
               className={`w-full py-3 px-4 bg-gray-50 rounded-lg border ${
-                errors.email ? 'border-red-500' : 'border-gray-200'
+                errors.email ? "border-red-500" : "border-gray-200"
               } focus:outline-none focus:ring-2 focus:ring-indigo-400 transition-all duration-300`}
               type="email"
               name="email"
@@ -163,7 +177,7 @@ const Signup = () => {
           <div className="relative">
             <textarea
               className={`w-full py-3 px-4 bg-gray-50 rounded-lg border ${
-                errors.message ? 'border-red-500' : 'border-gray-200'
+                errors.message ? "border-red-500" : "border-gray-200"
               } focus:outline-none focus:ring-2 focus:ring-indigo-400 transition-all duration-300 min-h-[120px]`}
               name="message"
               placeholder="Enter your Message"
@@ -207,4 +221,3 @@ const Signup = () => {
 };
 
 export default Signup;
-
