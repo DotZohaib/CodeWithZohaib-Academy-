@@ -19,6 +19,7 @@ const C = () => {
   const [expandedItems, setExpandedItems] = useState<number[]>([]);
   const [showScrollTop, setShowScrollTop] = useState(false);
 
+  // Fixed array declaration
   const array: Question[] = [
     {
       id: 1,
@@ -312,7 +313,9 @@ const C = () => {
   };
 
   useEffect(() => {
-    Prism.highlightAll();
+    if (typeof window !== 'undefined') {
+      Prism.highlightAll();
+    }
     
     const handleScroll = () => {
       setShowScrollTop(window.scrollY > 300);
@@ -320,9 +323,10 @@ const C = () => {
     
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
-  }, []);
+  }, [expandedItems]);
 
-  const handleCopy = (text: string, index: number) => {
+  const handleCopy = (text: string, index: number, e: React.MouseEvent) => {
+    e.stopPropagation();
     navigator.clipboard.writeText(text);
     setCopiedIndex(index);
     setTimeout(() => setCopiedIndex(null), 2000);
@@ -423,21 +427,18 @@ const C = () => {
                         <div className="flex justify-between items-center px-4 py-2 bg-gray-700">
                           <span className="text-gray-200">Code Example</span>
                           <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleCopy(item.code, item.id);
-                            }}
+                            onClick={(e) => handleCopy(item.code, item.id, e)}
                             className="flex items-center gap-2 px-3 py-1 bg-blue-500 hover:bg-blue-600 text-white rounded-md transition-colors"
                           >
                             {copiedIndex === item.id ? (
                               <>
                                 <Check size={16} />
-                                Copied!
+                                <span>Copied!</span>
                               </>
                             ) : (
                               <>
                                 <Copy size={16} />
-                                Copy
+                                <span>Copy</span>
                               </>
                             )}
                           </button>
@@ -471,3 +472,4 @@ const C = () => {
 };
 
 export default C;
+
