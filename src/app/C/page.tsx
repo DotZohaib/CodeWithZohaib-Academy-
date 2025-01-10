@@ -2,7 +2,8 @@
 'use client';
 import React, { useState, useEffect } from 'react';
 import Prism from "prismjs";
-import "prismjs/themes/prism-okaidia.css"; // Optional: Add a Prism theme
+import { Search, BookOpen, Code, ChevronUp, ChevronDown, Check, Copy } from 'lucide-react';
+import "prismjs/themes/prism-okaidia.css";
 
 interface Question {
   id: number;
@@ -12,10 +13,15 @@ interface Question {
   code: string;
 }
 
-const C: React.FC = () => {
+const C = () => {
   const [copiedIndex, setCopiedIndex] = useState<number | null>(null);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [selectedCategory, setSelectedCategory] = useState("all");
+  const [expandedItems, setExpandedItems] = useState<number[]>([]);
+  const [showScrollTop, setShowScrollTop] = useState(false);
 
-  const array: Question[] = [
+  // Your existing array data here...
+  const array: Question[] =
     {
       id: 1,
       Title: "1. What is C?",
@@ -298,10 +304,24 @@ const C: React.FC = () => {
       }
   ];
   
-  
+ const categories = {
+    all: "All Topics",
+    basics: "Basic Concepts (1-20)",
+    advanced: "Advanced Topics (21-40)",
+    pointers: "Pointers & Memory",
+    structures: "Structures & Unions",
+    files: "File Handling"
+  };
 
   useEffect(() => {
     Prism.highlightAll();
+    
+    const handleScroll = () => {
+      setShowScrollTop(window.scrollY > 300);
+    };
+    
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
   const handleCopy = (text: string, index: number) => {
@@ -310,30 +330,144 @@ const C: React.FC = () => {
     setTimeout(() => setCopiedIndex(null), 2000);
   };
 
+  const toggleExpand = (id: number) => {
+    setExpandedItems(prev => 
+      prev.includes(id) ? prev.filter(item => item !== id) : [...prev, id]
+    );
+  };
+
+  const scrollToTop = () => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  const filteredArray = array.filter(item => {
+    const matchesSearch = item.Title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         item.answer.toLowerCase().includes(searchTerm.toLowerCase());
+    
+    if (selectedCategory === 'all') return matchesSearch;
+    if (selectedCategory === 'basics') return matchesSearch && item.id <= 20;
+    if (selectedCategory === 'advanced') return matchesSearch && item.id > 20;
+    if (selectedCategory === 'pointers') return matchesSearch && [21, 22, 23, 38, 40].includes(item.id);
+    if (selectedCategory === 'structures') return matchesSearch && [24, 26, 27, 28, 37].includes(item.id);
+    if (selectedCategory === 'files') return matchesSearch && [30, 31, 32, 35].includes(item.id);
+    
+    return matchesSearch;
+  });
+
   return (
-    <div className="max-w-4xl mx-auto font-sans">
-      <h1 className="text-4xl font-bold text-center mb-8 text-gray-800">C Basics and Concepts</h1>
-
-      {array.map((item) => (
-        <section key={item.id} className="bg-white mx-3 p-6 rounded-lg shadow-lg mb-6">
-          <h2 className="text-2xl font-semibold mb-4 text-gray-700">{item.Title}</h2>
-          <p className="mb-2 text-gray-600"><strong>Answer:</strong> {item.answer}</p>
-          <p className="mb-4 text-gray-600"><strong>Sample Wording:</strong> {item.Sample}</p>
-
-          <h3 className="text-lg font-medium mb-2 text-gray-700">Code Example:</h3>
-          <div className="relative bg-gray-800 text-white p-4 rounded-md overflow-x-auto mb-4">
-            <button 
-              onClick={() => handleCopy(item.code, item.id)}
-              className="absolute top-2 right-2 bg-blue-500 text-white px-3 py-1 rounded-md hover:bg-blue-600"
+    <div className="min-h-screen bg-gray-50">
+      <nav className="sticky top-0 z-10 bg-white shadow-md">
+        <div className="max-w-4xl mx-auto px-4 py-4">
+          <h1 className="text-4xl font-bold text-center mb-6 text-gray-800">
+            C Programming Guide
+          </h1>
+          
+          <div className="flex flex-col md:flex-row gap-4 mb-4">
+            <div className="relative flex-1">
+              <Search className="absolute left-3 top-3 text-gray-400" size={20} />
+              <input
+                type="text"
+                placeholder="Search concepts..."
+                className="w-full pl-10 pr-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+              />
+            </div>
+            
+            <select
+              className="px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              value={selectedCategory}
+              onChange={(e) => setSelectedCategory(e.target.value)}
             >
-              {copiedIndex === item.id ? "Copied!" : "Copy"}
-            </button>
-            <pre>
-              <code className="language-js">{item.code}</code>
-            </pre>
+              {Object.entries(categories).map(([key, value]) => (
+                <option key={key} value={key}>{value}</option>
+              ))}
+            </select>
           </div>
-        </section>
-      ))}
+        </div>
+      </nav>
+
+      <main className="max-w-4xl mx-auto px-4 py-8">
+        {filteredArray.map((item) => {
+          const isExpanded = expandedItems.includes(item.id);
+          
+          return (
+            <div
+              key={item.id}
+              className="bg-white rounded-lg shadow-lg mb-6 transform transition-all duration-200 hover:shadow-xl"
+            >
+              <div
+                className="p-6 cursor-pointer"
+                onClick={() => toggleExpand(item.id)}
+              >
+                <div className="flex justify-between items-center">
+                  <h2 className="text-2xl font-semibold text-gray-700 flex items-center gap-2">
+                    <Code size={24} className="text-blue-500" />
+                    {item.Title}
+                  </h2>
+                  {isExpanded ? <ChevronUp size={24} /> : <ChevronDown size={24} />}
+                </div>
+                
+                {isExpanded && (
+                  <div className="mt-4 space-y-4 animate-fadeIn">
+                    <div className="bg-blue-50 p-4 rounded-lg">
+                      <h3 className="font-medium text-blue-800 mb-2">Explanation:</h3>
+                      <p className="text-gray-600">{item.answer}</p>
+                    </div>
+                    
+                    <div className="bg-green-50 p-4 rounded-lg">
+                      <h3 className="font-medium text-green-800 mb-2">Example Usage:</h3>
+                      <p className="text-gray-600">{item.Sample}</p>
+                    </div>
+
+                    <div className="relative">
+                      <div className="bg-gray-800 rounded-lg overflow-hidden">
+                        <div className="flex justify-between items-center px-4 py-2 bg-gray-700">
+                          <span className="text-gray-200">Code Example</span>
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleCopy(item.code, item.id);
+                            }}
+                            className="flex items-center gap-2 px-3 py-1 bg-blue-500 hover:bg-blue-600 text-white rounded-md transition-colors"
+                          >
+                            {copiedIndex === item.id ? (
+                              <>
+                                <Check size={16} />
+                                Copied!
+                              </>
+                            ) : (
+                              <>
+                                <Copy size={16} />
+                                Copy
+                              </>
+                            )}
+                          </button>
+                        </div>
+                        <div className="p-4 overflow-x-auto">
+                          <pre className="!m-0">
+                            <code className="language-c">{item.code}</code>
+                          </pre>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+          );
+        })}
+      </main>
+
+      {showScrollTop && (
+        <button
+          onClick={scrollToTop}
+          className="fixed bottom-8 right-8 p-4 bg-blue-500 text-white rounded-full shadow-lg hover:bg-blue-600 transition-all duration-200 animate-bounce"
+          aria-label="Scroll to top"
+        >
+          <ChevronUp size={24} />
+        </button>
+      )}
     </div>
   );
 };
