@@ -1,4 +1,3 @@
-// pages/index.tsx
 'use client';
 import React, { useState, useEffect } from 'react';
 import Prism from "prismjs";
@@ -20,8 +19,7 @@ const C = () => {
   const [expandedItems, setExpandedItems] = useState<number[]>([]);
   const [showScrollTop, setShowScrollTop] = useState(false);
 
-  // Your existing array data here...
-  const array: Question[] =
+  const array: Question[] = [
     {
       id: 1,
       Title: "1. What is C?",
