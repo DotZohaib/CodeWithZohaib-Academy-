@@ -2,7 +2,8 @@
 'use client';
 import React, { useState, useEffect } from 'react';
 import Prism from "prismjs";
-import "prismjs/themes/prism-okaidia.css"; // Optional: Add a Prism theme
+import { Search, BookOpen, Code, ChevronUp, ChevronDown, Check, Copy, Filter, Star } from 'lucide-react';
+import "prismjs/themes/prism-okaidia.css";
 
 interface Question {
   id: number;
@@ -12,9 +13,16 @@ interface Question {
   code: string;
 }
 
-const Cc: React.FC = () => {
+const Cpp = () => {
   const [copiedIndex, setCopiedIndex] = useState<number | null>(null);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [selectedCategory, setSelectedCategory] = useState("all");
+  const [expandedItems, setExpandedItems] = useState<number[]>([]);
+  const [showScrollTop, setShowScrollTop] = useState(false);
+  const [favorites, setFavorites] = useState<number[]>([]);
+  const [viewMode, setViewMode] = useState<'list' | 'grid'>('list');
 
+  // Your existing array data here...
   const array: Question[] = [
     {
       id: 1,
@@ -438,10 +446,24 @@ const Cc: React.FC = () => {
       }
   ];
   
-  
+const categories = {
+    all: "All Topics",
+    basics: "Basic Concepts (1-20)",
+    oop: "Object-Oriented Programming (21-40)",
+    advanced: "Advanced Features (41-60)",
+    stl: "STL & Templates",
+    memory: "Memory Management"
+  };
 
   useEffect(() => {
     Prism.highlightAll();
+    
+    const handleScroll = () => {
+      setShowScrollTop(window.scrollY > 300);
+    };
+    
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
   const handleCopy = (text: string, index: number) => {
@@ -450,32 +472,179 @@ const Cc: React.FC = () => {
     setTimeout(() => setCopiedIndex(null), 2000);
   };
 
+  const toggleFavorite = (id: number) => {
+    setFavorites(prev => 
+      prev.includes(id) ? prev.filter(item => item !== id) : [...prev, id]
+    );
+  };
+
+  const toggleExpand = (id: number) => {
+    setExpandedItems(prev => 
+      prev.includes(id) ? prev.filter(item => item !== id) : [...prev, id]
+    );
+  };
+
+  const scrollToTop = () => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  const filteredArray = array.filter(item => {
+    const matchesSearch = item.Title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         item.answer.toLowerCase().includes(searchTerm.toLowerCase());
+    
+    if (selectedCategory === 'all') return matchesSearch;
+    if (selectedCategory === 'basics') return matchesSearch && item.id <= 20;
+    if (selectedCategory === 'oop') return matchesSearch && item.id > 20 && item.id <= 40;
+    if (selectedCategory === 'advanced') return matchesSearch && item.id > 40;
+    if (selectedCategory === 'stl') return matchesSearch && [19, 20, 47, 48, 57].includes(item.id);
+    if (selectedCategory === 'memory') return matchesSearch && [23, 24, 25, 30, 32].includes(item.id);
+    
+    return matchesSearch;
+  });
+
   return (
-    <div className="max-w-4xl mx-auto font-sans">
-      <h1 className="text-4xl font-bold text-center mb-8 text-gray-800">C++ Basics and Concepts</h1>
-
-      {array.map((item) => (
-        <section key={item.id} className="bg-white mx-3 p-6 rounded-lg shadow-lg mb-6">
-          <h2 className="text-2xl font-semibold mb-4 text-gray-700">{item.Title}</h2>
-          <p className="mb-2 text-gray-600"><strong>Answer:</strong> {item.answer}</p>
-          <p className="mb-4 text-gray-600"><strong>Sample Wording:</strong> {item.Sample}</p>
-
-          <h3 className="text-lg font-medium mb-2 text-gray-700">Code Example:</h3>
-          <div className="relative bg-gray-800 text-white p-4 rounded-md overflow-x-auto mb-4">
-            <button 
-              onClick={() => handleCopy(item.code, item.id)}
-              className="absolute top-2 right-2 bg-blue-500 text-white px-3 py-1 rounded-md hover:bg-blue-600"
-            >
-              {copiedIndex === item.id ? "Copied!" : "Copy"}
-            </button>
-            <pre>
-              <code className="language-js">{item.code}</code>
-            </pre>
+    <div className="min-h-screen bg-gray-50">
+      <nav className="sticky top-0 z-10 bg-white shadow-md">
+        <div className="max-w-6xl mx-auto px-4 py-4">
+          <div className="flex items-center justify-between mb-4">
+            <h1 className="text-4xl font-bold text-gray-800 flex items-center gap-2">
+              <Code className="text-blue-500" />
+              C++ Programming Guide
+            </h1>
+            <div className="flex gap-2">
+              <button
+                onClick={() => setViewMode('list')}
+                className={`p-2 rounded ${viewMode === 'list' ? 'bg-blue-500 text-white' : 'bg-gray-200'}`}
+              >
+                List
+              </button>
+              <button
+                onClick={() => setViewMode('grid')}
+                className={`p-2 rounded ${viewMode === 'grid' ? 'bg-blue-500 text-white' : 'bg-gray-200'}`}
+              >
+                Grid
+              </button>
+            </div>
           </div>
-        </section>
-      ))}
+          
+          <div className="flex flex-col md:flex-row gap-4">
+            <div className="relative flex-1">
+              <Search className="absolute left-3 top-3 text-gray-400" size={20} />
+              <input
+                type="text"
+                placeholder="Search C++ concepts..."
+                className="w-full pl-10 pr-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+              />
+            </div>
+            
+            <select
+              className="px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              value={selectedCategory}
+              onChange={(e) => setSelectedCategory(e.target.value)}
+            >
+              {Object.entries(categories).map(([key, value]) => (
+                <option key={key} value={key}>{value}</option>
+              ))}
+            </select>
+          </div>
+        </div>
+      </nav>
+
+      <main className={`max-w-6xl mx-auto px-4 py-8 ${viewMode === 'grid' ? 'grid grid-cols-1 md:grid-cols-2 gap-6' : ''}`}>
+        {filteredArray.map((item) => {
+          const isExpanded = expandedItems.includes(item.id);
+          const isFavorite = favorites.includes(item.id);
+          
+          return (
+            <div
+              key={item.id}
+              className={`bg-white rounded-lg shadow-lg mb-6 transform transition-all duration-200 hover:shadow-xl
+                ${viewMode === 'grid' ? 'h-full' : ''}`}
+            >
+              <div className="p-6">
+                <div className="flex justify-between items-center">
+                  <h2 className="text-2xl font-semibold text-gray-700 flex items-center gap-2">
+                    <Code size={24} className="text-blue-500" />
+                    {item.Title}
+                  </h2>
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => toggleFavorite(item.id)}
+                      className={`p-2 rounded-full hover:bg-gray-100 ${isFavorite ? 'text-yellow-500' : 'text-gray-400'}`}
+                    >
+                      <Star size={20} fill={isFavorite ? 'currentColor' : 'none'} />
+                    </button>
+                    <button
+                      onClick={() => toggleExpand(item.id)}
+                      className="p-2 rounded-full hover:bg-gray-100"
+                    >
+                      {isExpanded ? <ChevronUp size={20} /> : <ChevronDown size={20} />}
+                    </button>
+                  </div>
+                </div>
+                
+                <p className="mt-2 text-gray-600">{item.answer}</p>
+                
+                {isExpanded && (
+                  <div className="mt-4 space-y-4 animate-fadeIn">
+                    {item.Sample && (
+                      <div className="bg-blue-50 p-4 rounded-lg">
+                        <h3 className="font-medium text-blue-800 mb-2">Example Usage:</h3>
+                        <p className="text-gray-600">{item.Sample}</p>
+                      </div>
+                    )}
+
+                    {item.code && (
+                      <div className="relative">
+                        <div className="bg-gray-800 rounded-lg overflow-hidden">
+                          <div className="flex justify-between items-center px-4 py-2 bg-gray-700">
+                            <span className="text-gray-200">Code Example</span>
+                            <button
+                              onClick={() => handleCopy(item.code, item.id)}
+                              className="flex items-center gap-2 px-3 py-1 bg-blue-500 hover:bg-blue-600 text-white rounded-md transition-colors"
+                            >
+                              {copiedIndex === item.id ? (
+                                <>
+                                  <Check size={16} />
+                                  Copied!
+                                </>
+                              ) : (
+                                <>
+                                  <Copy size={16} />
+                                  Copy
+                                </>
+                              )}
+                            </button>
+                          </div>
+                          <div className="p-4 overflow-x-auto">
+                            <pre className="!m-0">
+                              <code className="language-cpp">{item.code}</code>
+                            </pre>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+            </div>
+          );
+        })}
+      </main>
+
+      {showScrollTop && (
+        <button
+          onClick={scrollToTop}
+          className="fixed bottom-8 right-8 p-4 bg-blue-500 text-white rounded-full shadow-lg hover:bg-blue-600 transition-all duration-200 animate-bounce"
+          aria-label="Scroll to top"
+        >
+          <ChevronUp size={24} />
+        </button>
+      )}
     </div>
   );
 };
 
-export default Cc;
+export default Cpp;
