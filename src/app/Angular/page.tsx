@@ -1,8 +1,8 @@
-// pages/index.tsx
 'use client';
 import React, { useState, useEffect } from 'react';
 import Prism from "prismjs";
-import "prismjs/themes/prism-okaidia.css"; // Optional: Add a Prism theme
+import { Search, ChevronUp, Copy, Check, Filter, BookOpen } from 'lucide-react';
+import "prismjs/themes/prism-okaidia.css";
 
 interface Question {
   id: number;
@@ -14,8 +14,13 @@ interface Question {
 
 const Angular: React.FC = () => {
   const [copiedIndex, setCopiedIndex] = useState<number | null>(null);
-
- const array: Question[] = [
+  const [searchTerm, setSearchTerm] = useState('');
+  const [selectedCategory, setSelectedCategory] = useState('all');
+  const [showScrollTop, setShowScrollTop] = useState(false);
+  const [expandedItems, setExpandedItems] = useState<number[]>([]);
+  
+  // Your existing array data here...
+  const array: Question[] = [
     {
       id: 1,
       Title: "1. What is Angular?",
@@ -228,12 +233,20 @@ const Angular: React.FC = () => {
     }
   ];
   
-  
-  
+  useEffect(() => {
+    Prism.highlightAll();
+    
+    const handleScroll = () => {
+      setShowScrollTop(window.scrollY > 300);
+    };
+
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
 
   useEffect(() => {
     Prism.highlightAll();
-  }, []);
+  }, [searchTerm, selectedCategory]);
 
   const handleCopy = (text: string, index: number) => {
     navigator.clipboard.writeText(text);
@@ -241,30 +254,120 @@ const Angular: React.FC = () => {
     setTimeout(() => setCopiedIndex(null), 2000);
   };
 
+  const scrollToTop = () => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  const toggleExpand = (id: number) => {
+    setExpandedItems(prev => 
+      prev.includes(id) ? prev.filter(item => item !== id) : [...prev, id]
+    );
+  };
+
+  const filteredQuestions = array.filter(item => {
+    const matchesSearch = item.Title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         item.answer.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesCategory = selectedCategory === 'all' ? true :
+      (selectedCategory === 'basic' && item.id <= 10) ||
+      (selectedCategory === 'intermediate' && item.id > 10 && item.id <= 20) ||
+      (selectedCategory === 'advanced' && item.id > 20);
+    return matchesSearch && matchesCategory;
+  });
+
   return (
-    <div className="max-w-4xl mx-auto font-sans">
-      <h1 className="text-4xl font-bold text-center mb-8 text-gray-800">Angular Basics and Concepts</h1>
+    <div className="min-h-screen bg-gray-50 py-8">
+      <div className="max-w-4xl mx-auto font-sans px-4">
+        <div className="bg-gradient-to-r from-blue-600 to-purple-600 text-white p-8 rounded-lg shadow-lg mb-8 transform hover:scale-[1.02] transition-transform duration-300">
+          <h1 className="text-4xl font-bold text-center mb-4">Angular Interview Guide</h1>
+          <p className="text-center text-lg opacity-90">Comprehensive collection of Angular concepts and examples</p>
+        </div>
 
-      {array.map((item) => (
-        <section key={item.id} className="bg-white mx-3 p-6 rounded-lg shadow-lg mb-6">
-          <h2 className="text-2xl font-semibold mb-4 text-gray-700">{item.Title}</h2>
-          <p className="mb-2 text-gray-600"><strong>Answer:</strong> {item.answer}</p>
-          <p className="mb-4 text-gray-600"><strong>Sample Wording:</strong> {item.Sample}</p>
-
-          <h3 className="text-lg font-medium mb-2 text-gray-700">Code Example:</h3>
-          <div className="relative bg-gray-800 text-white p-4 rounded-md overflow-x-auto mb-4">
-            <button 
-              onClick={() => handleCopy(item.code, item.id)}
-              className="absolute top-2 right-2 bg-blue-500 text-white px-3 py-1 rounded-md hover:bg-blue-600"
-            >
-              {copiedIndex === item.id ? "Copied!" : "Copy"}
-            </button>
-            <pre>
-              <code className="language-js">{item.code}</code>
-            </pre>
+        <div className="sticky top-4 z-10 bg-white p-4 rounded-lg shadow-md mb-8 space-y-4">
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+            <input
+              type="text"
+              placeholder="Search questions..."
+              className="w-full pl-10 pr-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-300"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
           </div>
-        </section>
-      ))}
+
+          <div className="flex gap-2">
+            <Filter className="text-gray-500" />
+            <select
+              className="border rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-300"
+              value={selectedCategory}
+              onChange={(e) => setSelectedCategory(e.target.value)}
+            >
+              <option value="all">All Levels</option>
+              <option value="basic">Basic (1-10)</option>
+              <option value="intermediate">Intermediate (11-20)</option>
+              <option value="advanced">Advanced (21-30)</option>
+            </select>
+          </div>
+        </div>
+
+        {filteredQuestions.map((item) => (
+          <section
+            key={item.id}
+            className="bg-white p-6 rounded-lg shadow-lg mb-6 transform hover:shadow-xl transition-all duration-300"
+          >
+            <div
+              className="cursor-pointer flex justify-between items-center"
+              onClick={() => toggleExpand(item.id)}
+            >
+              <h2 className="text-2xl font-semibold text-gray-700">{item.Title}</h2>
+              <BookOpen className={`transform transition-transform duration-300 ${
+                expandedItems.includes(item.id) ? 'rotate-180' : ''
+              }`} />
+            </div>
+
+            <div className={`mt-4 space-y-4 transition-all duration-500 ${
+              expandedItems.includes(item.id) ? 'opacity-100' : 'opacity-0 h-0 overflow-hidden'
+            }`}>
+              <div className="bg-blue-50 p-4 rounded-lg">
+                <p className="text-gray-700"><strong>Answer:</strong> {item.answer}</p>
+              </div>
+
+              <div className="bg-purple-50 p-4 rounded-lg">
+                <p className="text-gray-700"><strong>Sample:</strong> {item.Sample}</p>
+              </div>
+
+              <div className="relative">
+                <div className="bg-gray-800 rounded-lg overflow-hidden">
+                  <div className="flex justify-between items-center px-4 py-2 bg-gray-700">
+                    <span className="text-gray-300">Code Example</span>
+                    <button
+                      onClick={() => handleCopy(item.code, item.id)}
+                      className="flex items-center gap-2 bg-blue-500 hover:bg-blue-600 text-white px-3 py-1 rounded-md transition-colors duration-300"
+                    >
+                      {copiedIndex === item.id ? (
+                        <><Check size={16} /> Copied!</>
+                      ) : (
+                        <><Copy size={16} /> Copy</>
+                      )}
+                    </button>
+                  </div>
+                  <pre className="p-4 overflow-x-auto">
+                    <code className="language-js">{item.code}</code>
+                  </pre>
+                </div>
+              </div>
+            </div>
+          </section>
+        ))}
+
+        {showScrollTop && (
+          <button
+            onClick={scrollToTop}
+            className="fixed bottom-8 right-8 bg-blue-500 hover:bg-blue-600 text-white p-3 rounded-full shadow-lg transition-all duration-300 animate-bounce"
+          >
+            <ChevronUp />
+          </button>
+        )}
+      </div>
     </div>
   );
 };
