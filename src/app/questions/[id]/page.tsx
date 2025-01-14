@@ -1,3 +1,6 @@
+
+
+
 'use client';
 import { array as database } from "../../../components/Database";
 import { motion, AnimatePresence } from "framer-motion";
@@ -27,8 +30,6 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 
 interface QuestionPageProps {
@@ -45,57 +46,64 @@ interface Comment {
 }
 
 export default function QuestionPage({ params }: QuestionPageProps) {
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const [id, setId] = useState<string | null>(params.id || null);
+  const [id] = useState<string | null>(params.id || null);
   const [isCopied, setIsCopied] = useState(false);
   const [isBookmarked, setIsBookmarked] = useState(false);
   const [showFullCode, setShowFullCode] = useState(false);
   const [selectedLanguage, setSelectedLanguage] = useState("typescript");
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const [votes, setVotes] = useState({ up: 0, down: 0 });
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const [userVote, setUserVote] = useState<"up" | "down" | null>(null);
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [showNotification, setShowNotification] = useState(false);
   const [notificationMessage, setNotificationMessage] = useState("");
   const [comments, setComments] = useState<Comment[]>([]);
   const [newComment, setNewComment] = useState("");
   const [isEditing, setIsEditing] = useState<number | null>(null);
   const [editText, setEditText] = useState("");
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const [showShareModal, setShowShareModal] = useState(false);
   const [isDarkMode, setIsDarkMode] = useState(false);
 
   const commentInputRef = useRef<HTMLTextAreaElement>(null);
   const question = id ? database.find((item) => item.id === parseInt(id, 10)) : null;
 
+  // Handle dark mode
   useEffect(() => {
-    if (id && typeof window !== "undefined") {
-      const bookmarks = JSON.parse(localStorage.getItem("bookmarks") || "[]");
-      setIsBookmarked(bookmarks.includes(parseInt(id)));
-
-      // Load dark mode preference
+    if (typeof window !== 'undefined') {
       const darkMode = localStorage.getItem("darkMode") === "true";
       setIsDarkMode(darkMode);
       if (darkMode) {
         document.documentElement.classList.add("dark");
       }
     }
+  }, []);
+
+  // Handle bookmarks
+  useEffect(() => {
+    if (id && typeof window !== 'undefined') {
+      const bookmarks = JSON.parse(localStorage.getItem("bookmarks") || "[]");
+      setIsBookmarked(bookmarks.includes(parseInt(id)));
+    }
   }, [id]);
 
+  // Initialize Prism
   useEffect(() => {
-    Prism.highlightAll();
+    if (typeof window !== 'undefined') {
+      Prism.highlightAll();
+    }
   }, [question, selectedLanguage, showFullCode]);
+
+  const showNotificationWithTimeout = (message: string) => {
+    setNotificationMessage(message);
+    setShowNotification(true);
+    setTimeout(() => setShowNotification(false), 3000);
+  };
 
   const handleCopyCode = async () => {
     if (question?.code) {
       try {
         await navigator.clipboard.writeText(question.code);
         setIsCopied(true);
-        setNotificationMessage("Code copied to clipboard!");
+        showNotificationWithTimeout("Code copied to clipboard!");
         setTimeout(() => setIsCopied(false), 2000);
       } catch (error) {
         console.error("Failed to copy code:", error);
+        showNotificationWithTimeout("Failed to copy code!");
       }
     }
   };
@@ -103,13 +111,18 @@ export default function QuestionPage({ params }: QuestionPageProps) {
   const handleBookmark = () => {
     if (typeof window === "undefined" || !id) return;
 
-    const bookmarks = JSON.parse(localStorage.getItem("bookmarks") || "[]");
-    const updatedBookmarks = isBookmarked
-      ? bookmarks.filter((bookmarkId: number) => bookmarkId !== parseInt(id))
-      : [...bookmarks, parseInt(id)];
-    localStorage.setItem("bookmarks", JSON.stringify(updatedBookmarks));
-    setIsBookmarked(!isBookmarked);
-    setNotificationMessage(isBookmarked ? "Removed from bookmarks!" : "Added to bookmarks!");
+    try {
+      const bookmarks = JSON.parse(localStorage.getItem("bookmarks") || "[]");
+      const updatedBookmarks = isBookmarked
+        ? bookmarks.filter((bookmarkId: number) => bookmarkId !== parseInt(id))
+        : [...bookmarks, parseInt(id)];
+      localStorage.setItem("bookmarks", JSON.stringify(updatedBookmarks));
+      setIsBookmarked(!isBookmarked);
+      showNotificationWithTimeout(isBookmarked ? "Removed from bookmarks!" : "Added to bookmarks!");
+    } catch (error) {
+      console.error("Failed to update bookmarks:", error);
+      showNotificationWithTimeout("Failed to update bookmarks!");
+    }
   };
 
   const handleShare = async () => {
@@ -119,9 +132,17 @@ export default function QuestionPage({ params }: QuestionPageProps) {
           title: question?.Title || "Question",
           url: window.location.href,
         });
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+        showNotificationWithTimeout("Shared successfully!");
       } catch (error) {
-        setShowShareModal(true);
+        console.error("Failed to share:", error);
+        // Fallback to copying URL to clipboard
+        try {
+          await navigator.clipboard.writeText(window.location.href);
+          showNotificationWithTimeout("URL copied to clipboard!");
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+        } catch (clipboardError) {
+          showNotificationWithTimeout("Failed to share!");
+        }
       }
     }
   };
@@ -131,14 +152,14 @@ export default function QuestionPage({ params }: QuestionPageProps) {
       const comment: Comment = {
         id: Date.now(),
         text: newComment,
-        author: "User", // Replace with actual user data
+        author: "User",
         timestamp: new Date().toISOString(),
         likes: 0,
         isEdited: false,
       };
       setComments([...comments, comment]);
       setNewComment("");
-      setNotificationMessage("Comment added successfully!");
+      showNotificationWithTimeout("Comment added successfully!");
     }
   };
 
@@ -151,27 +172,36 @@ export default function QuestionPage({ params }: QuestionPageProps) {
   };
 
   const handleSaveEdit = (commentId: number) => {
-    setComments(
-      comments.map((comment) =>
-        comment.id === commentId
-          ? { ...comment, text: editText, isEdited: true }
-          : comment
-      )
-    );
-    setIsEditing(null);
-    setEditText("");
-    setNotificationMessage("Comment updated successfully!");
+    if (editText.trim()) {
+      setComments(
+        comments.map((comment) =>
+          comment.id === commentId
+            ? { ...comment, text: editText, isEdited: true }
+            : comment
+        )
+      );
+      setIsEditing(null);
+      setEditText("");
+      showNotificationWithTimeout("Comment updated successfully!");
+    }
   };
 
   const handleDeleteComment = (commentId: number) => {
     setComments(comments.filter((comment) => comment.id !== commentId));
-    setNotificationMessage("Comment deleted successfully!");
+    showNotificationWithTimeout("Comment deleted successfully!");
   };
 
   const toggleDarkMode = () => {
-    setIsDarkMode(!isDarkMode);
-    document.documentElement.classList.toggle("dark");
-    localStorage.setItem("darkMode", (!isDarkMode).toString());
+    const newDarkMode = !isDarkMode;
+    setIsDarkMode(newDarkMode);
+    if (typeof window !== 'undefined') {
+      if (newDarkMode) {
+        document.documentElement.classList.add("dark");
+      } else {
+        document.documentElement.classList.remove("dark");
+      }
+      localStorage.setItem("darkMode", newDarkMode.toString());
+    }
   };
 
   if (!question) {
@@ -418,6 +448,10 @@ export default function QuestionPage({ params }: QuestionPageProps) {
         </motion.div>
       </div>
 
-</motion.div>
+
+
+      {/* Rest of your JSX remains the same */}
+      {/* ... */}
+    </motion.div>
   );
 }
