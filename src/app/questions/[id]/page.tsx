@@ -1,9 +1,14 @@
-'use client';
+"use client";
 
 import { array as database } from "../../../components/Database";
 import { motion, AnimatePresence } from "framer-motion";
 import Prism from "prismjs";
-import { useEffect, useState, useRef, SetStateAction, JSXElementConstructor, Key, ReactElement, ReactNode, ReactPortal } from "react";
+import {
+  useEffect,
+  useState,
+  useRef,
+  SetStateAction
+} from "react";
 import "prismjs/themes/prism-tomorrow.css";
 import "prismjs/components/prism-typescript";
 import "prismjs/components/prism-javascript";
@@ -18,11 +23,8 @@ import "prismjs/plugins/copy-to-clipboard/prism-copy-to-clipboard";
 import {
   CheckCircle,
   Copy,
-  ChevronUp,
-  ChevronDown,
   BookmarkPlus,
   Share2,
-  MessageSquare,
   Edit,
   Trash2,
 } from "lucide-react";
@@ -52,22 +54,30 @@ export default function QuestionPage({ params, searchParams }: PageProps) {
   const [isCopied, setIsCopied] = useState(false);
   const [isBookmarked, setIsBookmarked] = useState(false);
   const [showFullCode, setShowFullCode] = useState(false);
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [selectedLanguage, setSelectedLanguage] = useState("typescript");
   const [showNotification, setShowNotification] = useState(false);
   const [notificationMessage, setNotificationMessage] = useState("");
   const [comments, setComments] = useState<Comment[]>([]);
   const [newComment, setNewComment] = useState("");
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [isEditing, setIsEditing] = useState<number | null>(null);
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [editText, setEditText] = useState("");
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [isDarkMode, setIsDarkMode] = useState(false);
 
   const commentInputRef = useRef<HTMLTextAreaElement>(null);
 
-  const question = database.find((item: { id: number | null; }) => item.id === (id ? parseInt(id, 10) : null)) ?? null;
+  const question =
+    database.find(
+      (item: { id: number | null }) =>
+        item.id === (id ? parseInt(id, 10) : null)
+    ) ?? null;
 
   useEffect(() => {
     const handleDarkMode = () => {
-      if (typeof window !== 'undefined') {
+      if (typeof window !== "undefined") {
         const darkMode = localStorage.getItem("darkMode") === "true";
         setIsDarkMode(darkMode);
         document.documentElement.classList.toggle("dark", darkMode);
@@ -75,12 +85,12 @@ export default function QuestionPage({ params, searchParams }: PageProps) {
     };
 
     handleDarkMode();
-    window.addEventListener('storage', handleDarkMode);
-    return () => window.removeEventListener('storage', handleDarkMode);
+    window.addEventListener("storage", handleDarkMode);
+    return () => window.removeEventListener("storage", handleDarkMode);
   }, []);
 
   useEffect(() => {
-    if (!id || typeof window === 'undefined') return;
+    if (!id || typeof window === "undefined") return;
 
     try {
       const bookmarks = JSON.parse(localStorage.getItem("bookmarks") || "[]");
@@ -92,7 +102,7 @@ export default function QuestionPage({ params, searchParams }: PageProps) {
   }, [id]);
 
   useEffect(() => {
-    if (typeof window !== 'undefined' && question?.code) {
+    if (typeof window !== "undefined" && question?.code) {
       const timeout = setTimeout(() => {
         Prism.highlightAll();
       }, 0);
@@ -125,7 +135,9 @@ export default function QuestionPage({ params, searchParams }: PageProps) {
     if (typeof window === "undefined" || !id) return;
 
     try {
-      const bookmarks: number[] = JSON.parse(localStorage.getItem("bookmarks") || "[]");
+      const bookmarks: number[] = JSON.parse(
+        localStorage.getItem("bookmarks") || "[]"
+      );
       const parsedId = parseInt(id, 10);
 
       const updatedBookmarks = isBookmarked
@@ -188,20 +200,11 @@ export default function QuestionPage({ params, searchParams }: PageProps) {
     }
   };
 
-
   const handleDeleteComment = (commentId: number) => {
     setComments((prev) => prev.filter((comment) => comment.id !== commentId));
     showNotificationWithTimeout("Comment deleted successfully!");
   };
 
-  const toggleDarkMode = () => {
-    const newDarkMode = !isDarkMode;
-    setIsDarkMode(newDarkMode);
-    if (typeof window !== 'undefined') {
-      document.documentElement.classList.toggle("dark", newDarkMode);
-      localStorage.setItem("darkMode", newDarkMode.toString());
-    }
-  };
 
   if (!question) {
     return (
@@ -258,297 +261,107 @@ export default function QuestionPage({ params, searchParams }: PageProps) {
               variant="outline"
               size="sm"
               onClick={handleBookmark}
-              className={`${isBookmarked ? 'text-yellow-500' : ''}`}
+              className={`${isBookmarked ? "text-yellow-500" : ""}`}
             >
-              <BookmarkPlus className="w-4 h-4 mr-2" />
-              {isBookmarked ? 'Bookmarked' : 'Bookmark'}
+              {isBookmarked ? (
+                <CheckCircle className="mr-2 h-4 w-4" />
+              ) : (
+                <BookmarkPlus className="mr-2 h-4 w-4" />
+              )}
+              {isBookmarked ? "Bookmarked" : "Bookmark"}
             </Button>
-
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={handleShare}
-            >
-              <Share2 className="w-4 h-4 mr-2" />
+            <Button variant="outline" size="sm" onClick={handleShare}>
+              <Share2 className="mr-2 h-4 w-4" />
               Share
-            </Button>
-
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={toggleDarkMode}
-            >
-              {isDarkMode ? '☀️ Light' : '🌙 Dark'}
             </Button>
           </div>
         </div>
 
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.2 }}
-          className="bg-white dark:bg-gray-800 rounded-lg shadow-lg overflow-hidden"
-        >
-          <div className="p-4 border-b dark:border-gray-700">
-            <div className="flex justify-between items-center">
-              <select
-                value={selectedLanguage}
-                onChange={(e) => setSelectedLanguage(e.target.value)}
-                className="bg-gray-100 dark:bg-gray-700 rounded px-2 py-1"
-              >
-                <option value="typescript">TypeScript</option>
-                <option value="javascript">JavaScript</option>
-                <option value="jsx">JSX</option>
-                <option value="tsx">TSX</option>
-              </select>
-
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={handleCopyCode}
-                className="ml-2"
-              >
-                {isCopied ? (
-                  <CheckCircle className="w-4 h-4 mr-2 text-green-500" />
-                ) : (
-                  <Copy className="w-4 h-4 mr-2" />
-                )}
-                {isCopied ? 'Copied!' : 'Copy'}
-              </Button>
-            </div>
-          </div>
-
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6">
+          <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">
+            Code
+          </h2>
           <div className="relative">
-            <pre className={`line-numbers ${showFullCode ? '' : 'max-h-96 overflow-hidden'}`}>
-              <code className={`language-${selectedLanguage}`}>
-                {question.code}
-              </code>
+            <pre
+              className={`language-${selectedLanguage} ${
+                showFullCode ? "overflow-y-auto" : "max-h-64 overflow-y-hidden"
+              } line-numbers`}
+            >
+              <code>{question.code}</code>
             </pre>
-
             {!showFullCode && (
-              <div className="absolute bottom-0 left-0 right-0 h-24 bg-gradient-to-t from-white dark:from-gray-800 to-transparent" />
+              <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-gray-50 to-transparent dark:from-gray-800">
+                <button
+                  onClick={() => setShowFullCode(true)}
+                  className="w-full py-2 text-sm font-medium text-gray-500 hover:text-gray-800 dark:text-gray-400 dark:hover:text-gray-200"
+                >
+                  Show More
+                </button>
+              </div>
             )}
           </div>
+          <Button variant="outline" size="sm" onClick={handleCopyCode}>
+            {isCopied ? (
+              <CheckCircle className="mr-2 h-4 w-4" />
+            ) : (
+              <Copy className="mr-2 h-4 w-4" />
+            )}
+            {isCopied ? "Copied" : "Copy Code"}
+          </Button>
+        </div>
 
-          <div className="p-4 border-t dark:border-gray-700">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setShowFullCode(!showFullCode)}
-              className="w-full"
-            >
-              {showFullCode ? (
-                <>
-                  <ChevronUp className="w-4 h-4 mr-2" />
-                  Show Less
-                </>
-              ) : (
-                <>
-                  <ChevronDown className="w-4 h-4 mr-2" />
-                  Show More
-                </>
-              )}
-            </Button>
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6">
+          <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">
+            Comments
+          </h2>
+          <div className="space-y-4">
+            {comments.map((comment) => (
+              <div
+                key={comment.id}
+                className="border border-gray-200 dark:border-gray-700 rounded-lg p-4 space-y-2"
+              >
+                <p className="text-sm text-gray-700 dark:text-gray-300">
+                  {comment.text}
+                </p>
+                <div className="flex items-center justify-between">
+                  <small className="text-xs text-gray-500 dark:text-gray-400">
+                    {comment.author} &bull;{" "}
+                    {new Date(comment.timestamp).toLocaleString()}
+                  </small>
+                  <div className="space-x-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => handleEditComment(comment.id)}
+                      className="text-gray-500 dark:text-gray-400"
+                    >
+                      <Edit className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => handleDeleteComment(comment.id)}
+                      className="text-gray-500 dark:text-gray-400"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            ))}
           </div>
-        </motion.div>
-
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.4 }}
-          className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6"
-        >
-          <h2 className="text-2xl font-bold mb-4 dark:text-white">Comments</h2>
-
-          <div className="space-y-4 mb-6">
+          <div className="mt-4">
             <Textarea
               ref={commentInputRef}
               value={newComment}
               onChange={(e: { target: { value: SetStateAction<string>; }; }) => setNewComment(e.target.value)}
-              placeholder="Add a comment..."
-              className="w-full p-2 border rounded dark:bg-gray-700 dark:text-white"
+              placeholder="Add your comment..."
             />
-            <Button
-              onClick={handleAddComment}
-              disabled={!newComment.trim()}
-            >
-              <MessageSquare className="w-4 h-4 mr-2" />
-              Add Comment
+            <Button onClick={handleAddComment} className="mt-2">
+              Post Comment
             </Button>
           </div>
-
-          <AnimatePresence>
-            {comments.map((comment) => (
-              <motion.div
-                key={comment.id}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -20 }}
-                className="border-b dark:border-gray-700 py-4 last:border-0"
-              >
-                {isEditing === comment.id ? (
-                  <div className="space-y-2">
-                    <Textarea
-                      value={editText}
-                      onChange={(e: { target: { value: SetStateAction<string>; }; }) => setEditText(e.target.value)}
-                      className="w-full p-2 border rounded dark:bg-gray-700 dark:text-white"
-                    />
-                    <div className="flex space-x-2">
-                     <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() => setIsEditing(null)}
-                        >
-                          Cancel
-                        </Button>
-                    </div>
-                  </div>
-                ) : (
-                  <div>
-                    <div className="flex justify-between items-start">
-                      <div>
-                        <p className="font-semibold dark:text-white">{comment.author}</p>
-                        <p className="text-sm text-gray-500 dark:text-gray-400">
-                          {new Date(comment.timestamp).toLocaleDateString()}
-                          {comment.isEdited && " (edited)"}
-                        </p>
-                      </div>
-                      <div className="flex space-x-2">
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() => handleEditComment(comment.id)}
-                        >
-                          <Edit className="w-4 h-4" />
-                        </Button>
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() => handleDeleteComment(comment.id)}
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </Button>
-                      </div>
-                    </div>
-                    <p className="mt-2 text-gray-800 dark:text-gray-200">{comment.text}</p>
-                  </div>
-                )}
-              </motion.div>
-            ))}
-          </AnimatePresence>
-
-          {comments.length === 0 && (
-            <p className="text-gray-500 dark:text-gray-400 text-center py-4">
-              No comments yet. Be the first to comment!
-            </p>
-          )}
-        </motion.div>
-
-        {/* Question Details Section */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.6 }}
-          className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6"
-        >
-          <h2 className="text-2xl font-bold mb-4 dark:text-white">Question Details</h2>
-          <div className="prose dark:prose-invert max-w-none">
-            <div className="space-y-4">
-              {question.description && (
-                <div>
-                  <h3 className="text-xl font-semibold dark:text-white">Description</h3>
-                  <p className="text-gray-800 dark:text-gray-200">{question.description}</p>
-                </div>
-              )}
-
-              {question.tags && question.tags.length > 0 && (
-                <div>
-                  <h3 className="text-xl font-semibold dark:text-white">Tags</h3>
-                  <div className="flex flex-wrap gap-2">
-                    {question.tags.map((tag: string) => (
-                      <span
-                        key={tag}
-                        className="px-3 py-1 bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-100 rounded-full text-sm"
-                      >
-                        {tag}
-                      </span>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              <div>
-                <h3 className="text-xl font-semibold dark:text-white">Created</h3>
-                <p className="text-gray-800 dark:text-gray-200">
-                  {new Date(question.createdAt).toLocaleDateString()}
-                </p>
-              </div>
-
-              {question.lastUpdated && (
-                <div>
-                  <h3 className="text-xl font-semibold dark:text-white">Last Updated</h3>
-                  <p className="text-gray-800 dark:text-gray-200">
-                    {new Date(question.lastUpdated).toLocaleDateString()}
-                  </p>
-                </div>
-              )}
-            </div>
-          </div>
-        </motion.div>
-
-        {/* Related Questions Section */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.8 }}
-          className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6"
-        >
-          <h2 className="text-2xl font-bold mb-4 dark:text-white">Related Questions</h2>
-          {database
-            .filter((q: { id: number; tags: string[]; Title: string; }) =>
-              q.id !== parseInt(id) &&
-              (q.tags?.some((tag: string) => question.tags?.includes(tag)) ||
-               q.Title.toLowerCase().includes(question.Title.toLowerCase()))
-            )
-            .slice(0, 5)
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            .map((relatedQuestion: { id: Key | null | undefined; Title: string | number | bigint | boolean | ReactElement<unknown, string | JSXElementConstructor<any>> | Iterable<ReactNode> | ReactPortal | Promise<string | number | bigint | boolean | ReactPortal | ReactElement<unknown, string | JSXElementConstructor<any>> | Iterable<ReactNode> | null | undefined> | Iterable<ReactNode> | null | undefined; tags: string[]; }) => (
-              <motion.a
-                key={relatedQuestion.id}
-                href={`/questions/${relatedQuestion.id}`}
-                className="block p-4 hover:bg-gray-50 dark:hover:bg-gray-700 rounded-lg transition-colors duration-200"
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
-              >
-                <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
-                  {relatedQuestion.Title}
-                </h3>
-                {relatedQuestion.tags && (
-                  <div className="flex flex-wrap gap-2 mt-2">
-                    {relatedQuestion.tags.map((tag: string) => (
-                      <span
-                        key={tag}
-                        className="px-2 py-1 bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-100 rounded-full text-xs"
-                      >
-                        {tag}
-                      </span>
-                    ))}
-                  </div>
-                )}
-              </motion.a>
-            ))}
-
-          {database.filter((q: { id: number; tags: string[]; Title: string; }) =>
-            q.id !== parseInt(id) &&
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            (q.tags?.some((tag: any) => question.tags?.includes(tag)) ||
-             q.Title.toLowerCase().includes(question.Title.toLowerCase()))
-          ).length === 0 && (
-            <p className="text-gray-500 dark:text-gray-400 text-center py-4">
-              No related questions found.
-            </p>
-          )}
-        </motion.div>
+        </div>
       </div>
     </motion.div>
   );
