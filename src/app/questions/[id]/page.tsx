@@ -1,8 +1,9 @@
 'use client';
+
 import { array as database } from "../../../components/Database";
 import { motion, AnimatePresence } from "framer-motion";
 import Prism from "prismjs";
-import { useEffect, useState, useRef, SetStateAction } from "react";
+import { useEffect, useState, useRef, SetStateAction, JSXElementConstructor, Key, ReactElement, ReactNode, ReactPortal } from "react";
 import "prismjs/themes/prism-tomorrow.css";
 import "prismjs/components/prism-typescript";
 import "prismjs/components/prism-javascript";
@@ -29,9 +30,12 @@ import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Textarea } from "@/components/ui/textarea";
 
-interface QuestionPageProps {
-  params: { id: string };
-}
+type PageProps = {
+  params: {
+    id: string;
+  };
+  searchParams: { [key: string]: string | string[] | undefined };
+};
 
 interface Comment {
   id: number;
@@ -42,8 +46,8 @@ interface Comment {
   isEdited: boolean;
 }
 
-export default function QuestionPage({ params }: QuestionPageProps) {
-  // Use proper type for id state
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+export default function QuestionPage({ params, searchParams }: PageProps) {
   const [id] = useState<string>(params.id);
   const [isCopied, setIsCopied] = useState(false);
   const [isBookmarked, setIsBookmarked] = useState(false);
@@ -59,10 +63,8 @@ export default function QuestionPage({ params }: QuestionPageProps) {
 
   const commentInputRef = useRef<HTMLTextAreaElement>(null);
 
-  // Safe parsing of id and database lookup
   const question = database.find((item: { id: number | null; }) => item.id === (id ? parseInt(id, 10) : null)) ?? null;
 
-  // Combine dark mode effects
   useEffect(() => {
     const handleDarkMode = () => {
       if (typeof window !== 'undefined') {
@@ -77,7 +79,6 @@ export default function QuestionPage({ params }: QuestionPageProps) {
     return () => window.removeEventListener('storage', handleDarkMode);
   }, []);
 
-  // Improved bookmark effect with error handling
   useEffect(() => {
     if (!id || typeof window === 'undefined') return;
 
@@ -90,7 +91,6 @@ export default function QuestionPage({ params }: QuestionPageProps) {
     }
   }, [id]);
 
-  // Prism initialization with cleanup
   useEffect(() => {
     if (typeof window !== 'undefined' && question?.code) {
       const timeout = setTimeout(() => {
@@ -188,20 +188,6 @@ export default function QuestionPage({ params }: QuestionPageProps) {
     }
   };
 
-  const handleSaveEdit = (commentId: number) => {
-    if (!editText.trim()) return;
-
-    setComments((prev) =>
-      prev.map((comment) =>
-        comment.id === commentId
-          ? { ...comment, text: editText.trim(), isEdited: true }
-          : comment
-      )
-    );
-    setIsEditing(null);
-    setEditText("");
-    showNotificationWithTimeout("Comment updated successfully!");
-  };
 
   const handleDeleteComment = (commentId: number) => {
     setComments((prev) => prev.filter((comment) => comment.id !== commentId));
@@ -235,7 +221,6 @@ export default function QuestionPage({ params }: QuestionPageProps) {
     );
   }
 
-  // Rest of the JSX remains the same...
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -244,7 +229,6 @@ export default function QuestionPage({ params }: QuestionPageProps) {
       className="min-h-screen bg-gray-50 dark:bg-gray-900 py-12 px-4 sm:px-6 lg:px-8"
     >
       <div className="max-w-4xl mx-auto space-y-8">
-        {/* Notification */}
         <AnimatePresence>
           {showNotification && (
             <motion.div
@@ -260,7 +244,6 @@ export default function QuestionPage({ params }: QuestionPageProps) {
           )}
         </AnimatePresence>
 
-        {/* Question Title and Actions */}
         <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6">
           <motion.h1
             initial={{ opacity: 0 }}
@@ -275,24 +258,31 @@ export default function QuestionPage({ params }: QuestionPageProps) {
               variant="outline"
               size="sm"
               onClick={handleBookmark}
-              className={`${isBookmarked ? "text-yellow-500" : ""}`}
+              className={`${isBookmarked ? 'text-yellow-500' : ''}`}
             >
               <BookmarkPlus className="w-4 h-4 mr-2" />
-              {isBookmarked ? "Bookmarked" : "Bookmark"}
+              {isBookmarked ? 'Bookmarked' : 'Bookmark'}
             </Button>
 
-            <Button variant="outline" size="sm" onClick={handleShare}>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleShare}
+            >
               <Share2 className="w-4 h-4 mr-2" />
               Share
             </Button>
 
-            <Button variant="outline" size="sm" onClick={toggleDarkMode}>
-              {isDarkMode ? "☀️ Light" : "🌙 Dark"}
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={toggleDarkMode}
+            >
+              {isDarkMode ? '☀️ Light' : '🌙 Dark'}
             </Button>
           </div>
         </div>
 
-        {/* Code Section */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -323,15 +313,13 @@ export default function QuestionPage({ params }: QuestionPageProps) {
                 ) : (
                   <Copy className="w-4 h-4 mr-2" />
                 )}
-                {isCopied ? "Copied!" : "Copy"}
+                {isCopied ? 'Copied!' : 'Copy'}
               </Button>
             </div>
           </div>
 
           <div className="relative">
-            <pre
-              className={`line-numbers ${showFullCode ? "" : "max-h-96 overflow-hidden"}`}
-            >
+            <pre className={`line-numbers ${showFullCode ? '' : 'max-h-96 overflow-hidden'}`}>
               <code className={`language-${selectedLanguage}`}>
                 {question.code}
               </code>
@@ -364,7 +352,6 @@ export default function QuestionPage({ params }: QuestionPageProps) {
           </div>
         </motion.div>
 
-        {/* Comments Section */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -381,7 +368,10 @@ export default function QuestionPage({ params }: QuestionPageProps) {
               placeholder="Add a comment..."
               className="w-full p-2 border rounded dark:bg-gray-700 dark:text-white"
             />
-            <Button onClick={handleAddComment} disabled={!newComment.trim()}>
+            <Button
+              onClick={handleAddComment}
+              disabled={!newComment.trim()}
+            >
               <MessageSquare className="w-4 h-4 mr-2" />
               Add Comment
             </Button>
@@ -400,32 +390,24 @@ export default function QuestionPage({ params }: QuestionPageProps) {
                   <div className="space-y-2">
                     <Textarea
                       value={editText}
-                      onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setEditText(e.target.value)}
+                      onChange={(e: { target: { value: SetStateAction<string>; }; }) => setEditText(e.target.value)}
                       className="w-full p-2 border rounded dark:bg-gray-700 dark:text-white"
                     />
                     <div className="flex space-x-2">
-                      <Button
-                        size="sm"
-                        onClick={() => handleSaveEdit(comment.id)}
-                      >
-                        Save
-                      </Button>
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() => setIsEditing(null)}
-                      >
-                        Cancel
-                      </Button>
+                     <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => setIsEditing(null)}
+                        >
+                          Cancel
+                        </Button>
                     </div>
                   </div>
                 ) : (
                   <div>
                     <div className="flex justify-between items-start">
                       <div>
-                        <p className="font-semibold dark:text-white">
-                          {comment.author}
-                        </p>
+                        <p className="font-semibold dark:text-white">{comment.author}</p>
                         <p className="text-sm text-gray-500 dark:text-gray-400">
                           {new Date(comment.timestamp).toLocaleDateString()}
                           {comment.isEdited && " (edited)"}
@@ -448,19 +430,126 @@ export default function QuestionPage({ params }: QuestionPageProps) {
                         </Button>
                       </div>
                     </div>
-                    <p className="text-gray-800 dark:text-white">
-                      {comment.text}
-                    </p>
+                    <p className="mt-2 text-gray-800 dark:text-gray-200">{comment.text}</p>
                   </div>
                 )}
               </motion.div>
             ))}
           </AnimatePresence>
+
+          {comments.length === 0 && (
+            <p className="text-gray-500 dark:text-gray-400 text-center py-4">
+              No comments yet. Be the first to comment!
+            </p>
+          )}
+        </motion.div>
+
+        {/* Question Details Section */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.6 }}
+          className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6"
+        >
+          <h2 className="text-2xl font-bold mb-4 dark:text-white">Question Details</h2>
+          <div className="prose dark:prose-invert max-w-none">
+            <div className="space-y-4">
+              {question.description && (
+                <div>
+                  <h3 className="text-xl font-semibold dark:text-white">Description</h3>
+                  <p className="text-gray-800 dark:text-gray-200">{question.description}</p>
+                </div>
+              )}
+
+              {question.tags && question.tags.length > 0 && (
+                <div>
+                  <h3 className="text-xl font-semibold dark:text-white">Tags</h3>
+                  <div className="flex flex-wrap gap-2">
+                    {question.tags.map((tag: string) => (
+                      <span
+                        key={tag}
+                        className="px-3 py-1 bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-100 rounded-full text-sm"
+                      >
+                        {tag}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              <div>
+                <h3 className="text-xl font-semibold dark:text-white">Created</h3>
+                <p className="text-gray-800 dark:text-gray-200">
+                  {new Date(question.createdAt).toLocaleDateString()}
+                </p>
+              </div>
+
+              {question.lastUpdated && (
+                <div>
+                  <h3 className="text-xl font-semibold dark:text-white">Last Updated</h3>
+                  <p className="text-gray-800 dark:text-gray-200">
+                    {new Date(question.lastUpdated).toLocaleDateString()}
+                  </p>
+                </div>
+              )}
+            </div>
+          </div>
+        </motion.div>
+
+        {/* Related Questions Section */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.8 }}
+          className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6"
+        >
+          <h2 className="text-2xl font-bold mb-4 dark:text-white">Related Questions</h2>
+          {database
+            .filter((q: { id: number; tags: string[]; Title: string; }) =>
+              q.id !== parseInt(id) &&
+              (q.tags?.some((tag: string) => question.tags?.includes(tag)) ||
+               q.Title.toLowerCase().includes(question.Title.toLowerCase()))
+            )
+            .slice(0, 5)
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            .map((relatedQuestion: { id: Key | null | undefined; Title: string | number | bigint | boolean | ReactElement<unknown, string | JSXElementConstructor<any>> | Iterable<ReactNode> | ReactPortal | Promise<string | number | bigint | boolean | ReactPortal | ReactElement<unknown, string | JSXElementConstructor<any>> | Iterable<ReactNode> | null | undefined> | Iterable<ReactNode> | null | undefined; tags: string[]; }) => (
+              <motion.a
+                key={relatedQuestion.id}
+                href={`/questions/${relatedQuestion.id}`}
+                className="block p-4 hover:bg-gray-50 dark:hover:bg-gray-700 rounded-lg transition-colors duration-200"
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+              >
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+                  {relatedQuestion.Title}
+                </h3>
+                {relatedQuestion.tags && (
+                  <div className="flex flex-wrap gap-2 mt-2">
+                    {relatedQuestion.tags.map((tag: string) => (
+                      <span
+                        key={tag}
+                        className="px-2 py-1 bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-100 rounded-full text-xs"
+                      >
+                        {tag}
+                      </span>
+                    ))}
+                  </div>
+                )}
+              </motion.a>
+            ))}
+
+          {database.filter((q: { id: number; tags: string[]; Title: string; }) =>
+            q.id !== parseInt(id) &&
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            (q.tags?.some((tag: any) => question.tags?.includes(tag)) ||
+             q.Title.toLowerCase().includes(question.Title.toLowerCase()))
+          ).length === 0 && (
+            <p className="text-gray-500 dark:text-gray-400 text-center py-4">
+              No related questions found.
+            </p>
+          )}
         </motion.div>
       </div>
-
-      {/* Rest of your JSX remains the same */}
-      {/* ... */}
     </motion.div>
   );
 }
