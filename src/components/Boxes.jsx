@@ -86,7 +86,7 @@ const Boxes = () => {
       image: "/react.png",
       name: 'React.js - Build Interactive User Interfaces',
       des: 'React.js is a powerful JavaScript library used for building user interfaces. It enables you to create reusable UI components and manage the dynamic nature of web apps efficiently.',
-      link: '/React',
+      link: '/Reacte',
       category: 'frontend',
       difficulty: 'advanced',
       duration: '6 weeks',
