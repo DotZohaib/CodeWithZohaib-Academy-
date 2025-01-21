@@ -1,8 +1,18 @@
-// pages/index.tsx
-'use client';
-import React, { useState, useEffect } from 'react';
+"use client";
+import React, { useState, useEffect, useCallback } from "react";
 import Prism from "prismjs";
-import "prismjs/themes/prism-okaidia.css"; // Optional: Add a Prism theme
+import {
+  Search,
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  BookOpen,
+  Code,
+  ChevronUp,
+  ChevronDown,
+  Check,
+  Copy,
+} from "lucide-react";
+import "prismjs/themes/prism-okaidia.css";
+import "prismjs/components/prism-c";
 
 interface Question {
   id: number;
@@ -12,467 +22,690 @@ interface Question {
   code: string;
 }
 
+interface Categories {
+  [key: string]: string;
+}
+
 const Mongodb: React.FC = () => {
   const [copiedIndex, setCopiedIndex] = useState<number | null>(null);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [selectedCategory, setSelectedCategory] = useState("all");
+  const [expandedItems, setExpandedItems] = useState<number[]>([]);
+  const [showScrollTop, setShowScrollTop] = useState(false);
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const [error, setError] = useState<string | null>(null);
 
   const array: Question[] = [
     {
       id: 1,
       Title: "1. What is MongoDB?",
-      answer: "MongoDB is a NoSQL database that stores data in flexible, JSON-like documents.",
+      answer:
+        "MongoDB is a NoSQL database that stores data in flexible, JSON-like documents.",
       Sample: "Data stored in a collection as documents.",
-      code: `const mongoose = require('mongoose');\nconst Schema = mongoose.Schema;\nconst userSchema = new Schema({ name: String, age: Number });\nconst User = mongoose.model('User', userSchema);`
+      code: `const mongoose = require('mongoose');\nconst Schema = mongoose.Schema;\nconst userSchema = new Schema({ name: String, age: Number });\nconst User = mongoose.model('User', userSchema);`,
     },
     {
       id: 2,
       Title: "2. What is a document in MongoDB?",
-      answer: "A document is a basic unit of data in MongoDB, similar to a JSON object.",
+      answer:
+        "A document is a basic unit of data in MongoDB, similar to a JSON object.",
       Sample: "{ name: 'John', age: 30 }",
-      code: `db.collection('users').insertOne({ name: 'John', age: 30 });`
+      code: `db.collection('users').insertOne({ name: 'John', age: 30 });`,
     },
     {
       id: 3,
       Title: "3. What is a collection in MongoDB?",
-      answer: "A collection is a group of MongoDB documents, similar to a table in relational databases.",
+      answer:
+        "A collection is a group of MongoDB documents, similar to a table in relational databases.",
       Sample: "Users collection containing user documents.",
-      code: `db.createCollection('users');`
+      code: `db.createCollection('users');`,
     },
     {
       id: 4,
       Title: "4. How to connect to a MongoDB database?",
       answer: "Use the mongoose library to connect to a MongoDB database.",
       Sample: "Connecting to a database named 'test'.",
-      code: `mongoose.connect('mongodb://localhost/test', { useNewUrlParser: true, useUnifiedTopology: true });`
+      code: `mongoose.connect('mongodb://localhost/test', { useNewUrlParser: true, useUnifiedTopology: true });`,
     },
     {
       id: 5,
       Title: "5. What are indexes in MongoDB?",
-      answer: "Indexes improve the speed of data retrieval operations on a collection.",
+      answer:
+        "Indexes improve the speed of data retrieval operations on a collection.",
       Sample: "Creating an index on the 'name' field.",
-      code: `db.users.createIndex({ name: 1 });`
+      code: `db.users.createIndex({ name: 1 });`,
     },
     {
       id: 6,
       Title: "6. How to insert a document in MongoDB?",
       answer: "Use the insertOne() or insertMany() method to insert documents.",
       Sample: "Inserting a single user document.",
-      code: `db.users.insertOne({ name: 'Jane', age: 25 });`
+      code: `db.users.insertOne({ name: 'Jane', age: 25 });`,
     },
     {
       id: 7,
       Title: "7. How to update a document in MongoDB?",
-      answer: "Use the updateOne() or updateMany() methods to update documents.",
+      answer:
+        "Use the updateOne() or updateMany() methods to update documents.",
       Sample: "Updating the age of a user.",
-      code: `db.users.updateOne({ name: 'Jane' }, { $set: { age: 26 } });`
+      code: `db.users.updateOne({ name: 'Jane' }, { $set: { age: 26 } });`,
     },
     {
       id: 8,
       Title: "8. How to delete a document in MongoDB?",
-      answer: "Use the deleteOne() or deleteMany() methods to remove documents.",
+      answer:
+        "Use the deleteOne() or deleteMany() methods to remove documents.",
       Sample: "Deleting a user document.",
-      code: `db.users.deleteOne({ name: 'Jane' });`
+      code: `db.users.deleteOne({ name: 'Jane' });`,
     },
     {
       id: 9,
       Title: "9. What is the purpose of the ObjectId?",
-      answer: "ObjectId is a unique identifier for documents in a MongoDB collection.",
+      answer:
+        "ObjectId is a unique identifier for documents in a MongoDB collection.",
       Sample: "Generated by MongoDB to uniquely identify documents.",
-      code: `const ObjectId = mongoose.Types.ObjectId;`
+      code: `const ObjectId = mongoose.Types.ObjectId;`,
     },
     {
       id: 10,
       Title: "10. How to find documents in MongoDB?",
       answer: "Use the find() method to query documents in a collection.",
       Sample: "Finding all users.",
-      code: `db.users.find();`
+      code: `db.users.find();`,
     },
     {
       id: 11,
       Title: "11. How to filter results in MongoDB?",
-      answer: "You can filter results using query objects in the find() method.",
+      answer:
+        "You can filter results using query objects in the find() method.",
       Sample: "Finding users aged 25.",
-      code: `db.users.find({ age: 25 });`
+      code: `db.users.find({ age: 25 });`,
     },
     {
       id: 12,
       Title: "12. What is aggregation in MongoDB?",
-      answer: "Aggregation is a way to process data and return computed results.",
+      answer:
+        "Aggregation is a way to process data and return computed results.",
       Sample: "Using the aggregate() method to group data.",
-      code: `db.users.aggregate([{ $group: { _id: '$age', count: { $sum: 1 } } }]);`
+      code: `db.users.aggregate([{ $group: { _id: '$age', count: { $sum: 1 } } }]);`,
     },
     {
       id: 13,
       Title: "13. How to use the $match operator in aggregation?",
-      answer: "The $match operator filters documents to pass only the documents that match the specified condition.",
+      answer:
+        "The $match operator filters documents to pass only the documents that match the specified condition.",
       Sample: "Filtering users aged 25 in aggregation.",
-      code: `db.users.aggregate([{ $match: { age: 25 } }]);`
+      code: `db.users.aggregate([{ $match: { age: 25 } }]);`,
     },
     {
       id: 14,
       Title: "14. What is a replica set in MongoDB?",
-      answer: "A replica set is a group of MongoDB servers that maintain the same data set.",
+      answer:
+        "A replica set is a group of MongoDB servers that maintain the same data set.",
       Sample: "Ensuring high availability and data redundancy.",
-      code: `rs.initiate();`
+      code: `rs.initiate();`,
     },
     {
       id: 15,
       Title: "15. What is sharding in MongoDB?",
-      answer: "Sharding is a method for distributing data across multiple servers to ensure scalability.",
+      answer:
+        "Sharding is a method for distributing data across multiple servers to ensure scalability.",
       Sample: "Partitioning data across shards.",
-      code: `sh.shardCollection('mydb.users', { user_id: 1 });`
+      code: `sh.shardCollection('mydb.users', { user_id: 1 });`,
     },
     {
       id: 16,
       Title: "16. What is the MongoDB shell?",
-      answer: "The MongoDB shell is an interactive JavaScript interface to MongoDB.",
+      answer:
+        "The MongoDB shell is an interactive JavaScript interface to MongoDB.",
       Sample: "Using the shell to interact with the database.",
-      code: `mongo;`
+      code: `mongo;`,
     },
     {
       id: 17,
       Title: "17. How to export data from MongoDB?",
       answer: "Use the mongoexport command to export data from a collection.",
       Sample: "Exporting users collection to JSON.",
-      code: `mongoexport --db mydb --collection users --out users.json;`
+      code: `mongoexport --db mydb --collection users --out users.json;`,
     },
     {
       id: 18,
       Title: "18. How to import data into MongoDB?",
       answer: "Use the mongoimport command to import data from a file.",
       Sample: "Importing users from a JSON file.",
-      code: `mongoimport --db mydb --collection users --file users.json;`
+      code: `mongoimport --db mydb --collection users --file users.json;`,
     },
     {
       id: 19,
       Title: "19. What are MongoDB data types?",
-      answer: "MongoDB supports various data types such as String, Number, ObjectId, Array, etc.",
+      answer:
+        "MongoDB supports various data types such as String, Number, ObjectId, Array, etc.",
       Sample: "Using different data types in documents.",
-      code: `const user = { name: 'John', age: 30, hobbies: ['reading', 'traveling'] };`
+      code: `const user = { name: 'John', age: 30, hobbies: ['reading', 'traveling'] };`,
     },
     {
       id: 20,
       Title: "20. What is the use of the $set operator?",
       answer: "The $set operator updates the value of a field in a document.",
       Sample: "Updating the user's age.",
-      code: `db.users.updateOne({ name: 'John' }, { $set: { age: 31 } });`
+      code: `db.users.updateOne({ name: 'John' }, { $set: { age: 31 } });`,
     },
     {
       id: 21,
       Title: "21. How to create an index on multiple fields?",
-      answer: "You can create a compound index on multiple fields in a collection.",
+      answer:
+        "You can create a compound index on multiple fields in a collection.",
       Sample: "Creating an index on name and age.",
-      code: `db.users.createIndex({ name: 1, age: -1 });`
+      code: `db.users.createIndex({ name: 1, age: -1 });`,
     },
     {
       id: 22,
       Title: "22. How to perform a text search in MongoDB?",
-      answer: "You can create a text index and use the $text operator to search text.",
+      answer:
+        "You can create a text index and use the $text operator to search text.",
       Sample: "Finding users with 'John' in their names.",
-      code: `db.users.createIndex({ name: 'text' });\ndb.users.find({ $text: { $search: 'John' } });`
+      code: `db.users.createIndex({ name: 'text' });\ndb.users.find({ $text: { $search: 'John' } });`,
     },
     {
       id: 23,
       Title: "23. What is a histogram in MongoDB?",
       answer: "A histogram is used to visualize the distribution of data.",
       Sample: "Using aggregation to create a histogram.",
-      code: `db.users.aggregate([{ $group: { _id: '$age', count: { $sum: 1 } } }]);`
+      code: `db.users.aggregate([{ $group: { _id: '$age', count: { $sum: 1 } } }]);`,
     },
     {
       id: 24,
       Title: "24. How to handle data validation in MongoDB?",
-      answer: "You can use schema validation to enforce data integrity in collections.",
+      answer:
+        "You can use schema validation to enforce data integrity in collections.",
       Sample: "Defining a schema for users.",
-      code: `db.createCollection('users', { validator: { $jsonSchema: { bsonType: 'object', required: ['name', 'age'], properties: { name: { bsonType: 'string' }, age: { bsonType: 'int' } } } } } });`
+      code: `db.createCollection('users', { validator: { $jsonSchema: { bsonType: 'object', required: ['name', 'age'], properties: { name: { bsonType: 'string' }, age: { bsonType: 'int' } } } } } });`,
     },
     {
       id: 25,
       Title: "25. What are the differences between SQL and MongoDB?",
-      answer: "SQL is a relational database, while MongoDB is a NoSQL document-oriented database.",
+      answer:
+        "SQL is a relational database, while MongoDB is a NoSQL document-oriented database.",
       Sample: "Schema flexibility in MongoDB compared to SQL.",
-      code: `// SQL: CREATE TABLE users (id INT, name VARCHAR(100));\n// MongoDB: db.users.insertOne({ name: 'John' });`
+      code: `// SQL: CREATE TABLE users (id INT, name VARCHAR(100));\n// MongoDB: db.users.insertOne({ name: 'John' });`,
     },
     {
       id: 26,
       Title: "26. How to implement a Many-to-Many relationship in MongoDB?",
       answer: "You can use arrays to implement Many-to-Many relationships.",
       Sample: "Users and their roles.",
-      code: `const user = { name: 'John', roles: ['admin', 'user'] };`
+      code: `const user = { name: 'John', roles: ['admin', 'user'] };`,
     },
     {
       id: 27,
       Title: "27. How to retrieve only specific fields in MongoDB?",
-      answer: "You can specify fields to include or exclude in the find() method.",
+      answer:
+        "You can specify fields to include or exclude in the find() method.",
       Sample: "Retrieving only names from users.",
-      code: `db.users.find({}, { name: 1 });`
+      code: `db.users.find({}, { name: 1 });`,
     },
     {
       id: 28,
       Title: "28. How to sort results in MongoDB?",
       answer: "You can use the sort() method to order query results.",
       Sample: "Sorting users by age in descending order.",
-      code: `db.users.find().sort({ age: -1 });`
+      code: `db.users.find().sort({ age: -1 });`,
     },
     {
       id: 29,
       Title: "29. What is the $lookup operator?",
       answer: "The $lookup operator performs left outer joins on collections.",
       Sample: "Joining users with their orders.",
-      code: `db.users.aggregate([{ $lookup: { from: 'orders', localField: 'userId', foreignField: 'userId', as: 'orders' } }]);`
+      code: `db.users.aggregate([{ $lookup: { from: 'orders', localField: 'userId', foreignField: 'userId', as: 'orders' } }]);`,
     },
     {
       id: 30,
       Title: "30. How to handle large datasets in MongoDB?",
-      answer: "Use pagination and indexing to efficiently handle large datasets.",
+      answer:
+        "Use pagination and indexing to efficiently handle large datasets.",
       Sample: "Using limit and skip for pagination.",
-      code: `db.users.find().skip(10).limit(10);`
+      code: `db.users.find().skip(10).limit(10);`,
     },
     {
       id: 31,
       Title: "31. What is the use of the $push operator?",
       answer: "The $push operator adds an element to an array in a document.",
       Sample: "Adding a hobby to a user.",
-      code: `db.users.updateOne({ name: 'John' }, { $push: { hobbies: 'coding' } });`
+      code: `db.users.updateOne({ name: 'John' }, { $push: { hobbies: 'coding' } });`,
     },
     {
       id: 32,
       Title: "32. How to ensure data consistency in MongoDB?",
-      answer: "Use transactions to ensure data consistency across multiple operations.",
+      answer:
+        "Use transactions to ensure data consistency across multiple operations.",
       Sample: "Performing multiple updates in a transaction.",
-      code: `const session = client.startSession();\nsession.startTransaction();\n// Perform operations\nawait session.commitTransaction();`
+      code: `const session = client.startSession();\nsession.startTransaction();\n// Perform operations\nawait session.commitTransaction();`,
     },
     {
       id: 33,
       Title: "33. What is the purpose of the $unset operator?",
       answer: "The $unset operator removes a field from a document.",
       Sample: "Removing the age field from a user.",
-      code: `db.users.updateOne({ name: 'John' }, { $unset: { age: '' } });`
+      code: `db.users.updateOne({ name: 'John' }, { $unset: { age: '' } });`,
     },
     {
       id: 34,
       Title: "34. How to find the number of documents in a collection?",
-      answer: "Use the countDocuments() method to count documents in a collection.",
+      answer:
+        "Use the countDocuments() method to count documents in a collection.",
       Sample: "Counting all users.",
-      code: `db.users.countDocuments();`
+      code: `db.users.countDocuments();`,
     },
     {
       id: 35,
       Title: "35. How to use the $in operator?",
-      answer: "The $in operator checks if a value matches any value in an array.",
+      answer:
+        "The $in operator checks if a value matches any value in an array.",
       Sample: "Finding users with specific ages.",
-      code: `db.users.find({ age: { $in: [25, 30] } });`
+      code: `db.users.find({ age: { $in: [25, 30] } });`,
     },
     {
       id: 36,
       Title: "36. How to use the $or operator?",
       answer: "The $or operator combines multiple conditions in a query.",
       Sample: "Finding users who are either 25 or 30.",
-      code: `db.users.find({ $or: [{ age: 25 }, { age: 30 }] });`
+      code: `db.users.find({ $or: [{ age: 25 }, { age: 30 }] });`,
     },
     {
       id: 37,
       Title: "37. What is the use of the $expr operator?",
-      answer: "The $expr operator allows the use of aggregation expressions within the query language.",
+      answer:
+        "The $expr operator allows the use of aggregation expressions within the query language.",
       Sample: "Comparing fields in a query.",
-      code: `db.users.find({ $expr: { $gt: ['$age', '$otherAge'] } });`
+      code: `db.users.find({ $expr: { $gt: ['$age', '$otherAge'] } });`,
     },
     {
       id: 38,
       Title: "38. What is the purpose of the $geoNear stage?",
-      answer: "The $geoNear stage is used to return documents sorted by distance from a specified point.",
+      answer:
+        "The $geoNear stage is used to return documents sorted by distance from a specified point.",
       Sample: "Finding nearby locations.",
-      code: `db.places.aggregate([{ $geoNear: { near: { type: 'Point', coordinates: [102.0, 0.5] }, distanceField: 'dist.calculated' } } }]);`
+      code: `db.places.aggregate([{ $geoNear: { near: { type: 'Point', coordinates: [102.0, 0.5] }, distanceField: 'dist.calculated' } } }]);`,
     },
     {
       id: 39,
       Title: "39. How to implement a one-to-many relationship in MongoDB?",
-      answer: "You can embed documents or use references to implement one-to-many relationships.",
+      answer:
+        "You can embed documents or use references to implement one-to-many relationships.",
       Sample: "Users with multiple posts.",
-      code: `const user = { name: 'John', posts: [{ title: 'Post 1' }, { title: 'Post 2' }] };`
+      code: `const user = { name: 'John', posts: [{ title: 'Post 1' }, { title: 'Post 2' }] };`,
     },
     {
       id: 40,
       Title: "40. What is the use of the $addFields operator?",
-      answer: "The $addFields operator adds new fields to documents in the aggregation pipeline.",
+      answer:
+        "The $addFields operator adds new fields to documents in the aggregation pipeline.",
       Sample: "Adding a field to store the age in months.",
-      code: `db.users.aggregate([{ $addFields: { ageInMonths: { $multiply: ['$age', 12] } } }]);`
+      code: `db.users.aggregate([{ $addFields: { ageInMonths: { $multiply: ['$age', 12] } } }]);`,
     },
     {
-        id: 41,
-        Title: "41. What is the purpose of the $set operator?",
-        answer: "The $set operator updates the value of a field in a document without altering the other fields.",
-        Sample: "Updating the user's email.",
-        code: `db.users.updateOne({ name: 'John' }, { $set: { email: 'john@example.com' } });`
-      },
-      {
-        id: 42,
-        Title: "42. How to create an index in MongoDB?",
-        answer: "You can create an index using the createIndex() method to improve query performance.",
-        Sample: "Creating an index on the email field.",
-        code: `db.users.createIndex({ email: 1 });`
-      },
-      {
-        id: 43,
-        Title: "43. What are capped collections?",
-        answer: "Capped collections are fixed-size collections that maintain insertion order and automatically overwrite old data when full.",
-        Sample: "Creating a capped collection for logs.",
-        code: `db.createCollection('logs', { capped: true, size: 100000 });`
-      },
-      {
-        id: 44,
-        Title: "44. How to update multiple documents at once?",
-        answer: "You can use the updateMany() method to update multiple documents that match a query.",
-        Sample: "Updating status for multiple users.",
-        code: `db.users.updateMany({ status: 'inactive' }, { $set: { status: 'active' } });`
-      },
-      {
-        id: 45,
-        Title: "45. What is the purpose of the $merge operator?",
-        answer: "The $merge operator allows you to merge the results of an aggregation pipeline into an existing collection.",
-        Sample: "Merging aggregated results into a summary collection.",
-        code: `db.orders.aggregate([{ $group: { _id: '$userId', total: { $sum: '$amount' } } }, { $merge: { into: 'orderSummary' } }]);`
-      },
-      {
-        id: 46,
-        Title: "46. How to handle schema validation in MongoDB?",
-        answer: "You can use JSON Schema to define validation rules for documents in a collection.",
-        Sample: "Defining a schema for users.",
-        code: `db.createCollection('users', { validator: { $jsonSchema: { bsonType: 'object', required: ['name', 'email'], properties: { name: { bsonType: 'string' }, email: { bsonType: 'string' } } } } } });`
-      },
-      {
-        id: 47,
-        Title: "47. What is the $count stage in aggregation?",
-        answer: "The $count stage counts the number of documents that pass through the aggregation pipeline.",
-        Sample: "Counting the number of active users.",
-        code: `db.users.aggregate([{ $match: { status: 'active' } }, { $count: 'activeUserCount' }]);`
-      },
-      {
-        id: 48,
-        Title: "48. How to project fields in an aggregation pipeline?",
-        answer: "You can use the $project stage to include or exclude fields in the aggregation output.",
-        Sample: "Projecting only name and age fields.",
-        code: `db.users.aggregate([{ $project: { name: 1, age: 1 } }]);`
-      },
-      {
-        id: 49,
-        Title: "49. How to perform a text search in MongoDB?",
-        answer: "You can create a text index and use the $text operator to perform text searches.",
-        Sample: "Searching for users with a specific keyword in their bio.",
-        code: `db.users.createIndex({ bio: 'text' });\ndb.users.find({ $text: { $search: 'developer' } });`
-      },
-      {
-        id: 50,
-        Title: "50. What is the aggregation framework?",
-        answer: "The aggregation framework is a powerful tool for data processing and analysis in MongoDB, allowing you to transform and combine data.",
-        Sample: "Calculating total sales.",
-        code: `db.sales.aggregate([{ $group: { _id: '$product', totalSales: { $sum: '$amount' } } }]);`
-      },
-      {
-        id: 51,
-        Title: "51. What is the use of the $add operator?",
-        answer: "The $add operator is used to add numbers, dates, or arrays in aggregation expressions.",
-        Sample: "Calculating the total amount including tax.",
-        code: `db.sales.aggregate([{ $project: { total: { $add: ['$amount', '$tax'] } } }]);`
-      },
-      {
-        id: 52,
-        Title: "52. How to implement pagination using aggregation?",
-        answer: "You can implement pagination by using the $skip and $limit stages in the aggregation pipeline.",
-        Sample: "Paginating results to show 10 users per page.",
-        code: `db.users.aggregate([{ $skip: 10 }, { $limit: 10 }]);`
-      },
-      {
-        id: 53,
-        Title: "53. How to use the $sample operator?",
-        answer: "The $sample operator randomly selects documents from a collection.",
-        Sample: "Selecting 5 random users.",
-        code: `db.users.aggregate([{ $sample: { size: 5 } }]);`
-      },
-      {
-        id: 54,
-        Title: "54. What is the $facet stage?",
-        answer: "The $facet stage allows you to perform multiple independent aggregations in a single query.",
-        Sample: "Calculating total and average sales in one query.",
-        code: `db.sales.aggregate([{ $facet: { totalSales: [{ $group: { _id: null, total: { $sum: '$amount' } } }], averageSales: [{ $group: { _id: null, average: { $avg: '$amount' } } }] } }]);`
-      },
-      {
-        id: 55,
-        Title: "55. What is the use of the $group stage?",
-        answer: "The $group stage groups documents by specified fields and allows for aggregating data.",
-        Sample: "Grouping sales by product.",
-        code: `db.sales.aggregate([{ $group: { _id: '$product', totalAmount: { $sum: '$amount' } } }]);`
-      },
-      {
-        id: 56,
-        Title: "56. How to use the $arrayElemAt operator?",
-        answer: "The $arrayElemAt operator retrieves an element from an array at a specified index.",
-        Sample: "Getting the first hobby from a user's hobbies array.",
-        code: `db.users.aggregate([{ $project: { firstHobby: { $arrayElemAt: ['$hobbies', 0] } } }]);`
-      },
-      {
-        id: 57,
-        Title: "57. How to create a geospatial index?",
-        answer: "You can create a 2dsphere index for geospatial queries using the createIndex() method.",
-        Sample: "Creating a geospatial index for locations.",
-        code: `db.locations.createIndex({ location: '2dsphere' });`
-      },
-      {
-        id: 58,
-        Title: "58. How to perform a join using the aggregation framework?",
-        answer: "You can use the $lookup stage in the aggregation framework to perform joins.",
-        Sample: "Joining users with their orders.",
-        code: `db.users.aggregate([{ $lookup: { from: 'orders', localField: 'userId', foreignField: 'userId', as: 'orders' } }]);`
-      },
-      {
-        id: 59,
-        Title: "59. How to perform bulk operations in MongoDB?",
-        answer: "You can perform bulk operations using the bulkWrite() method to execute multiple write operations.",
-        Sample: "Inserting multiple users at once.",
-        code: `db.users.bulkWrite([{ insertOne: { document: { name: 'John' } } }, { insertOne: { document: { name: 'Jane' } } }]);`
-      },
-      {
-        id: 60,
-        Title: "60. How to use the $ifNull operator?",
-        answer: "The $ifNull operator returns the value of a field or a default value if the field is null.",
-        Sample: "Returning user's email or a placeholder if null.",
-        code: `db.users.aggregate([{ $project: { email: { $ifNull: ['$email', 'no-email@example.com'] } } }]);`
-      }
+      id: 41,
+      Title: "41. What is the purpose of the $set operator?",
+      answer:
+        "The $set operator updates the value of a field in a document without altering the other fields.",
+      Sample: "Updating the user's email.",
+      code: `db.users.updateOne({ name: 'John' }, { $set: { email: 'john@example.com' } });`,
+    },
+    {
+      id: 42,
+      Title: "42. How to create an index in MongoDB?",
+      answer:
+        "You can create an index using the createIndex() method to improve query performance.",
+      Sample: "Creating an index on the email field.",
+      code: `db.users.createIndex({ email: 1 });`,
+    },
+    {
+      id: 43,
+      Title: "43. What are capped collections?",
+      answer:
+        "Capped collections are fixed-size collections that maintain insertion order and automatically overwrite old data when full.",
+      Sample: "Creating a capped collection for logs.",
+      code: `db.createCollection('logs', { capped: true, size: 100000 });`,
+    },
+    {
+      id: 44,
+      Title: "44. How to update multiple documents at once?",
+      answer:
+        "You can use the updateMany() method to update multiple documents that match a query.",
+      Sample: "Updating status for multiple users.",
+      code: `db.users.updateMany({ status: 'inactive' }, { $set: { status: 'active' } });`,
+    },
+    {
+      id: 45,
+      Title: "45. What is the purpose of the $merge operator?",
+      answer:
+        "The $merge operator allows you to merge the results of an aggregation pipeline into an existing collection.",
+      Sample: "Merging aggregated results into a summary collection.",
+      code: `db.orders.aggregate([{ $group: { _id: '$userId', total: { $sum: '$amount' } } }, { $merge: { into: 'orderSummary' } }]);`,
+    },
+    {
+      id: 46,
+      Title: "46. How to handle schema validation in MongoDB?",
+      answer:
+        "You can use JSON Schema to define validation rules for documents in a collection.",
+      Sample: "Defining a schema for users.",
+      code: `db.createCollection('users', { validator: { $jsonSchema: { bsonType: 'object', required: ['name', 'email'], properties: { name: { bsonType: 'string' }, email: { bsonType: 'string' } } } } } });`,
+    },
+    {
+      id: 47,
+      Title: "47. What is the $count stage in aggregation?",
+      answer:
+        "The $count stage counts the number of documents that pass through the aggregation pipeline.",
+      Sample: "Counting the number of active users.",
+      code: `db.users.aggregate([{ $match: { status: 'active' } }, { $count: 'activeUserCount' }]);`,
+    },
+    {
+      id: 48,
+      Title: "48. How to project fields in an aggregation pipeline?",
+      answer:
+        "You can use the $project stage to include or exclude fields in the aggregation output.",
+      Sample: "Projecting only name and age fields.",
+      code: `db.users.aggregate([{ $project: { name: 1, age: 1 } }]);`,
+    },
+    {
+      id: 49,
+      Title: "49. How to perform a text search in MongoDB?",
+      answer:
+        "You can create a text index and use the $text operator to perform text searches.",
+      Sample: "Searching for users with a specific keyword in their bio.",
+      code: `db.users.createIndex({ bio: 'text' });\ndb.users.find({ $text: { $search: 'developer' } });`,
+    },
+    {
+      id: 50,
+      Title: "50. What is the aggregation framework?",
+      answer:
+        "The aggregation framework is a powerful tool for data processing and analysis in MongoDB, allowing you to transform and combine data.",
+      Sample: "Calculating total sales.",
+      code: `db.sales.aggregate([{ $group: { _id: '$product', totalSales: { $sum: '$amount' } } }]);`,
+    },
+    {
+      id: 51,
+      Title: "51. What is the use of the $add operator?",
+      answer:
+        "The $add operator is used to add numbers, dates, or arrays in aggregation expressions.",
+      Sample: "Calculating the total amount including tax.",
+      code: `db.sales.aggregate([{ $project: { total: { $add: ['$amount', '$tax'] } } }]);`,
+    },
+    {
+      id: 52,
+      Title: "52. How to implement pagination using aggregation?",
+      answer:
+        "You can implement pagination by using the $skip and $limit stages in the aggregation pipeline.",
+      Sample: "Paginating results to show 10 users per page.",
+      code: `db.users.aggregate([{ $skip: 10 }, { $limit: 10 }]);`,
+    },
+    {
+      id: 53,
+      Title: "53. How to use the $sample operator?",
+      answer:
+        "The $sample operator randomly selects documents from a collection.",
+      Sample: "Selecting 5 random users.",
+      code: `db.users.aggregate([{ $sample: { size: 5 } }]);`,
+    },
+    {
+      id: 54,
+      Title: "54. What is the $facet stage?",
+      answer:
+        "The $facet stage allows you to perform multiple independent aggregations in a single query.",
+      Sample: "Calculating total and average sales in one query.",
+      code: `db.sales.aggregate([{ $facet: { totalSales: [{ $group: { _id: null, total: { $sum: '$amount' } } }], averageSales: [{ $group: { _id: null, average: { $avg: '$amount' } } }] } }]);`,
+    },
+    {
+      id: 55,
+      Title: "55. What is the use of the $group stage?",
+      answer:
+        "The $group stage groups documents by specified fields and allows for aggregating data.",
+      Sample: "Grouping sales by product.",
+      code: `db.sales.aggregate([{ $group: { _id: '$product', totalAmount: { $sum: '$amount' } } }]);`,
+    },
+    {
+      id: 56,
+      Title: "56. How to use the $arrayElemAt operator?",
+      answer:
+        "The $arrayElemAt operator retrieves an element from an array at a specified index.",
+      Sample: "Getting the first hobby from a user's hobbies array.",
+      code: `db.users.aggregate([{ $project: { firstHobby: { $arrayElemAt: ['$hobbies', 0] } } }]);`,
+    },
+    {
+      id: 57,
+      Title: "57. How to create a geospatial index?",
+      answer:
+        "You can create a 2dsphere index for geospatial queries using the createIndex() method.",
+      Sample: "Creating a geospatial index for locations.",
+      code: `db.locations.createIndex({ location: '2dsphere' });`,
+    },
+    {
+      id: 58,
+      Title: "58. How to perform a join using the aggregation framework?",
+      answer:
+        "You can use the $lookup stage in the aggregation framework to perform joins.",
+      Sample: "Joining users with their orders.",
+      code: `db.users.aggregate([{ $lookup: { from: 'orders', localField: 'userId', foreignField: 'userId', as: 'orders' } }]);`,
+    },
+    {
+      id: 59,
+      Title: "59. How to perform bulk operations in MongoDB?",
+      answer:
+        "You can perform bulk operations using the bulkWrite() method to execute multiple write operations.",
+      Sample: "Inserting multiple users at once.",
+      code: `db.users.bulkWrite([{ insertOne: { document: { name: 'John' } } }, { insertOne: { document: { name: 'Jane' } } }]);`,
+    },
+    {
+      id: 60,
+      Title: "60. How to use the $ifNull operator?",
+      answer:
+        "The $ifNull operator returns the value of a field or a default value if the field is null.",
+      Sample: "Returning user's email or a placeholder if null.",
+      code: `db.users.aggregate([{ $project: { email: { $ifNull: ['$email', 'no-email@example.com'] } } }]);`,
+    },
   ];
-  
 
-  useEffect(() => {
-    Prism.highlightAll();
-  }, []);
-
-  const handleCopy = (text: string, index: number) => {
-    navigator.clipboard.writeText(text);
-    setCopiedIndex(index);
-    setTimeout(() => setCopiedIndex(null), 2000);
+  const categories: Categories = {
+    all: "All Topics",
+    basics: "Basic Concepts (1-20)",
+    advanced: "Advanced Topics (21-40)",
+    pointers: "Pointers & Memory",
+    structures: "Structures & Unions",
+    files: "File Handling",
   };
 
+  useEffect(() => {
+    const initializePrism = () => {
+      if (typeof window !== "undefined") {
+        Prism.highlightAll();
+      }
+    };
+
+    initializePrism();
+  }, [expandedItems]);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      setShowScrollTop(window.scrollY > 300);
+    };
+
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
+
+  const handleCopy = useCallback(
+    async (text: string, index: number, e: React.MouseEvent) => {
+      e.stopPropagation();
+      try {
+        await navigator.clipboard.writeText(text);
+        setCopiedIndex(index);
+        setTimeout(() => setCopiedIndex(null), 2000);
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      } catch (err) {
+        setError("Failed to copy to clipboard");
+        setTimeout(() => setError(null), 2000);
+      }
+    },
+    []
+  );
+
+  const toggleExpand = useCallback((id: number) => {
+    setExpandedItems((prev) =>
+      prev.includes(id) ? prev.filter((item) => item !== id) : [...prev, id]
+    );
+  }, []);
+
+  const scrollToTop = useCallback(() => {
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }, []);
+
+  const filteredArray = array.filter((item) => {
+    const matchesSearch =
+      item.Title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      item.answer.toLowerCase().includes(searchTerm.toLowerCase());
+
+    switch (selectedCategory) {
+      case "all":
+        return matchesSearch;
+      case "basics":
+        return matchesSearch && item.id <= 20;
+      case "advanced":
+        return matchesSearch && item.id > 20;
+      case "pointers":
+        return matchesSearch && [21, 22, 23, 38, 40].includes(item.id);
+      case "structures":
+        return matchesSearch && [24, 26, 27, 28, 37].includes(item.id);
+      case "files":
+        return matchesSearch && [30, 31, 32, 35].includes(item.id);
+      default:
+        return matchesSearch;
+    }
+  });
+
   return (
-    <div className="max-w-4xl mx-auto font-sans">
-      <h1 className="text-4xl font-bold text-center mb-8 text-gray-800">MongoDB Basics and Concepts</h1>
+    <div className="min-h-screen bg-gray-50">
+      <nav className="sticky top-0 z-10 bg-white shadow-md">
+        <div className="max-w-4xl mx-auto px-4 py-4">
+          <h1 className="text-4xl font-bold text-center mb-6 text-gray-800">
+            Mongodb Programming Guide
+          </h1>
 
-      {array.map((item) => (
-        <section key={item.id} className="bg-white mx-3 p-6 rounded-lg shadow-lg mb-6">
-          <h2 className="text-2xl font-semibold mb-4 text-gray-700">{item.Title}</h2>
-          <p className="mb-2 text-gray-600"><strong>Answer:</strong> {item.answer}</p>
-          <p className="mb-4 text-gray-600"><strong>Sample Wording:</strong> {item.Sample}</p>
+          <div className="flex flex-col md:flex-row gap-4 mb-4">
+            <div className="relative flex-1">
+              <Search
+                className="absolute left-3 top-3 text-gray-400"
+                size={20}
+              />
+              <input
+                type="text"
+                placeholder="Search concepts..."
+                className="w-full pl-10 pr-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+              />
+            </div>
 
-          <h3 className="text-lg font-medium mb-2 text-gray-700">Code Example:</h3>
-          <div className="relative bg-gray-800 text-white p-4 rounded-md overflow-x-auto mb-4">
-            <button 
-              onClick={() => handleCopy(item.code, item.id)}
-              className="absolute top-2 right-2 bg-blue-500 text-white px-3 py-1 rounded-md hover:bg-blue-600"
+            <select
+              className="px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              value={selectedCategory}
+              onChange={(e) => setSelectedCategory(e.target.value)}
             >
-              {copiedIndex === item.id ? "Copied!" : "Copy"}
-            </button>
-            <pre>
-              <code className="language-js">{item.code}</code>
-            </pre>
+              {Object.entries(categories).map(([key, value]) => (
+                <option key={key} value={key}>
+                  {value}
+                </option>
+              ))}
+            </select>
           </div>
-        </section>
-      ))}
+        </div>
+      </nav>
+
+      <main className="max-w-4xl mx-auto px-4 py-8">
+        {filteredArray.map((item) => {
+          const isExpanded = expandedItems.includes(item.id);
+
+          return (
+            <div
+              key={item.id}
+              className="bg-white rounded-lg shadow-lg mb-6 transform transition-all duration-200 hover:shadow-xl"
+            >
+              <div
+                className="p-6 cursor-pointer"
+                onClick={() => toggleExpand(item.id)}
+              >
+                <div className="flex justify-between items-center">
+                  <h2 className="text-2xl font-semibold text-gray-700 flex items-center gap-2">
+                    <Code size={24} className="text-blue-500" />
+                    {item.Title}
+                  </h2>
+                  {isExpanded ? (
+                    <ChevronUp size={24} />
+                  ) : (
+                    <ChevronDown size={24} />
+                  )}
+                </div>
+
+                {isExpanded && (
+                  <div className="mt-4 space-y-4 animate-fadeIn">
+                    <div className="bg-blue-50 p-4 rounded-lg">
+                      <h3 className="font-medium text-blue-800 mb-2">
+                        Explanation:
+                      </h3>
+                      <p className="text-gray-600">{item.answer}</p>
+                    </div>
+
+                    <div className="bg-green-50 p-4 rounded-lg">
+                      <h3 className="font-medium text-green-800 mb-2">
+                        Example Usage:
+                      </h3>
+                      <p className="text-gray-600">{item.Sample}</p>
+                    </div>
+
+                    <div className="relative">
+                      <div className="bg-gray-800 rounded-lg overflow-hidden">
+                        <div className="flex justify-between items-center px-4 py-2 bg-gray-700">
+                          <span className="text-gray-200">Code Example</span>
+                          <button
+                            onClick={(e) => handleCopy(item.code, item.id, e)}
+                            className="flex items-center gap-2 px-3 py-1 bg-blue-500 hover:bg-blue-600 text-white rounded-md transition-colors"
+                          >
+                            {copiedIndex === item.id ? (
+                              <>
+                                <Check size={16} />
+                                <span>Copied!</span>
+                              </>
+                            ) : (
+                              <>
+                                <Copy size={16} />
+                                <span>Copy</span>
+                              </>
+                            )}
+                          </button>
+                        </div>
+                        <div className="p-4 overflow-x-auto">
+                          <pre className="!m-0">
+                            <code className="language-c">{item.code}</code>
+                          </pre>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+          );
+        })}
+      </main>
+
+      {showScrollTop && (
+        <button
+          onClick={scrollToTop}
+          className="fixed bottom-8 right-8 p-4 bg-blue-500 text-white rounded-full shadow-lg hover:bg-blue-600 transition-all duration-200 animate-bounce"
+          aria-label="Scroll to top"
+        >
+          <ChevronUp size={24} />
+        </button>
+      )}
     </div>
   );
 };
