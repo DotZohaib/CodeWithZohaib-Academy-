@@ -1,11 +1,8 @@
-
-
-
 'use client';
 import { array as database } from "../../../components/Database";
 import { motion, AnimatePresence } from "framer-motion";
 import Prism from "prismjs";
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, SetStateAction } from "react";
 import "prismjs/themes/prism-tomorrow.css";
 import "prismjs/components/prism-typescript";
 import "prismjs/components/prism-javascript";
@@ -46,7 +43,8 @@ interface Comment {
 }
 
 export default function QuestionPage({ params }: QuestionPageProps) {
-  const [id] = useState<string | null>(params.id || null);
+  // Use proper type for id state
+  const [id] = useState<string>(params.id);
   const [isCopied, setIsCopied] = useState(false);
   const [isBookmarked, setIsBookmarked] = useState(false);
   const [showFullCode, setShowFullCode] = useState(false);
@@ -60,51 +58,66 @@ export default function QuestionPage({ params }: QuestionPageProps) {
   const [isDarkMode, setIsDarkMode] = useState(false);
 
   const commentInputRef = useRef<HTMLTextAreaElement>(null);
-  const question = id ? database.find((item) => item.id === parseInt(id, 10)) : null;
 
-  // Handle dark mode
+  // Safe parsing of id and database lookup
+  const question = database.find((item: { id: number | null; }) => item.id === (id ? parseInt(id, 10) : null)) ?? null;
+
+  // Combine dark mode effects
   useEffect(() => {
-    if (typeof window !== 'undefined') {
-      const darkMode = localStorage.getItem("darkMode") === "true";
-      setIsDarkMode(darkMode);
-      if (darkMode) {
-        document.documentElement.classList.add("dark");
+    const handleDarkMode = () => {
+      if (typeof window !== 'undefined') {
+        const darkMode = localStorage.getItem("darkMode") === "true";
+        setIsDarkMode(darkMode);
+        document.documentElement.classList.toggle("dark", darkMode);
       }
-    }
+    };
+
+    handleDarkMode();
+    window.addEventListener('storage', handleDarkMode);
+    return () => window.removeEventListener('storage', handleDarkMode);
   }, []);
 
-  // Handle bookmarks
+  // Improved bookmark effect with error handling
   useEffect(() => {
-    if (id && typeof window !== 'undefined') {
+    if (!id || typeof window === 'undefined') return;
+
+    try {
       const bookmarks = JSON.parse(localStorage.getItem("bookmarks") || "[]");
       setIsBookmarked(bookmarks.includes(parseInt(id)));
+    } catch (error) {
+      console.error("Error loading bookmarks:", error);
+      setIsBookmarked(false);
     }
   }, [id]);
 
-  // Initialize Prism
+  // Prism initialization with cleanup
   useEffect(() => {
-    if (typeof window !== 'undefined') {
-      Prism.highlightAll();
+    if (typeof window !== 'undefined' && question?.code) {
+      const timeout = setTimeout(() => {
+        Prism.highlightAll();
+      }, 0);
+      return () => clearTimeout(timeout);
     }
   }, [question, selectedLanguage, showFullCode]);
 
   const showNotificationWithTimeout = (message: string) => {
     setNotificationMessage(message);
     setShowNotification(true);
-    setTimeout(() => setShowNotification(false), 3000);
+    const timeout = setTimeout(() => setShowNotification(false), 3000);
+    return () => clearTimeout(timeout);
   };
 
   const handleCopyCode = async () => {
-    if (question?.code) {
-      try {
-        await navigator.clipboard.writeText(question.code);
-        setIsCopied(true);
-        showNotificationWithTimeout("Code copied to clipboard!");
-        setTimeout(() => setIsCopied(false), 2000);
-      } catch (error) {
-        console.error("Failed to copy code:", error);
-        showNotificationWithTimeout("Failed to copy code!");
-      }
+    if (!question?.code) return;
+
+    try {
+      await navigator.clipboard.writeText(question.code);
+      setIsCopied(true);
+      showNotificationWithTimeout("Code copied to clipboard!");
+      setTimeout(() => setIsCopied(false), 2000);
+    } catch (error) {
+      console.error("Failed to copy code:", error);
+      showNotificationWithTimeout("Failed to copy code!");
     }
   };
 
@@ -112,13 +125,18 @@ export default function QuestionPage({ params }: QuestionPageProps) {
     if (typeof window === "undefined" || !id) return;
 
     try {
-      const bookmarks = JSON.parse(localStorage.getItem("bookmarks") || "[]");
+      const bookmarks: number[] = JSON.parse(localStorage.getItem("bookmarks") || "[]");
+      const parsedId = parseInt(id, 10);
+
       const updatedBookmarks = isBookmarked
-        ? bookmarks.filter((bookmarkId: number) => bookmarkId !== parseInt(id))
-        : [...bookmarks, parseInt(id)];
+        ? bookmarks.filter((bookmarkId) => bookmarkId !== parsedId)
+        : [...bookmarks, parsedId];
+
       localStorage.setItem("bookmarks", JSON.stringify(updatedBookmarks));
       setIsBookmarked(!isBookmarked);
-      showNotificationWithTimeout(isBookmarked ? "Removed from bookmarks!" : "Added to bookmarks!");
+      showNotificationWithTimeout(
+        isBookmarked ? "Removed from bookmarks!" : "Added to bookmarks!"
+      );
     } catch (error) {
       console.error("Failed to update bookmarks:", error);
       showNotificationWithTimeout("Failed to update bookmarks!");
@@ -126,41 +144,40 @@ export default function QuestionPage({ params }: QuestionPageProps) {
   };
 
   const handleShare = async () => {
-    if (typeof window !== "undefined") {
-      try {
+    if (typeof window === "undefined") return;
+
+    try {
+      if (navigator.share) {
         await navigator.share({
           title: question?.Title || "Question",
           url: window.location.href,
         });
         showNotificationWithTimeout("Shared successfully!");
-      } catch (error) {
-        console.error("Failed to share:", error);
-        // Fallback to copying URL to clipboard
-        try {
-          await navigator.clipboard.writeText(window.location.href);
-          showNotificationWithTimeout("URL copied to clipboard!");
-        // eslint-disable-next-line @typescript-eslint/no-unused-vars
-        } catch (clipboardError) {
-          showNotificationWithTimeout("Failed to share!");
-        }
+      } else {
+        await navigator.clipboard.writeText(window.location.href);
+        showNotificationWithTimeout("URL copied to clipboard!");
       }
+    } catch (error) {
+      console.error("Failed to share:", error);
+      showNotificationWithTimeout("Failed to share!");
     }
   };
 
   const handleAddComment = () => {
-    if (newComment.trim()) {
-      const comment: Comment = {
-        id: Date.now(),
-        text: newComment,
-        author: "User",
-        timestamp: new Date().toISOString(),
-        likes: 0,
-        isEdited: false,
-      };
-      setComments([...comments, comment]);
-      setNewComment("");
-      showNotificationWithTimeout("Comment added successfully!");
-    }
+    if (!newComment.trim()) return;
+
+    const comment: Comment = {
+      id: Date.now(),
+      text: newComment.trim(),
+      author: "User",
+      timestamp: new Date().toISOString(),
+      likes: 0,
+      isEdited: false,
+    };
+
+    setComments((prev) => [...prev, comment]);
+    setNewComment("");
+    showNotificationWithTimeout("Comment added successfully!");
   };
 
   const handleEditComment = (commentId: number) => {
@@ -172,22 +189,22 @@ export default function QuestionPage({ params }: QuestionPageProps) {
   };
 
   const handleSaveEdit = (commentId: number) => {
-    if (editText.trim()) {
-      setComments(
-        comments.map((comment) =>
-          comment.id === commentId
-            ? { ...comment, text: editText, isEdited: true }
-            : comment
-        )
-      );
-      setIsEditing(null);
-      setEditText("");
-      showNotificationWithTimeout("Comment updated successfully!");
-    }
+    if (!editText.trim()) return;
+
+    setComments((prev) =>
+      prev.map((comment) =>
+        comment.id === commentId
+          ? { ...comment, text: editText.trim(), isEdited: true }
+          : comment
+      )
+    );
+    setIsEditing(null);
+    setEditText("");
+    showNotificationWithTimeout("Comment updated successfully!");
   };
 
   const handleDeleteComment = (commentId: number) => {
-    setComments(comments.filter((comment) => comment.id !== commentId));
+    setComments((prev) => prev.filter((comment) => comment.id !== commentId));
     showNotificationWithTimeout("Comment deleted successfully!");
   };
 
@@ -195,11 +212,7 @@ export default function QuestionPage({ params }: QuestionPageProps) {
     const newDarkMode = !isDarkMode;
     setIsDarkMode(newDarkMode);
     if (typeof window !== 'undefined') {
-      if (newDarkMode) {
-        document.documentElement.classList.add("dark");
-      } else {
-        document.documentElement.classList.remove("dark");
-      }
+      document.documentElement.classList.toggle("dark", newDarkMode);
       localStorage.setItem("darkMode", newDarkMode.toString());
     }
   };
@@ -213,13 +226,16 @@ export default function QuestionPage({ params }: QuestionPageProps) {
           transition={{ duration: 0.5 }}
           className="text-center space-y-4"
         >
-          <p className="text-3xl font-semibold text-red-600 dark:text-red-400">Question not found.</p>
+          <p className="text-3xl font-semibold text-red-600 dark:text-red-400">
+            Question not found
+          </p>
           <Button onClick={() => window.history.back()}>Go Back</Button>
         </motion.div>
       </div>
     );
   }
 
+  // Rest of the JSX remains the same...
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -259,27 +275,19 @@ export default function QuestionPage({ params }: QuestionPageProps) {
               variant="outline"
               size="sm"
               onClick={handleBookmark}
-              className={`${isBookmarked ? 'text-yellow-500' : ''}`}
+              className={`${isBookmarked ? "text-yellow-500" : ""}`}
             >
               <BookmarkPlus className="w-4 h-4 mr-2" />
-              {isBookmarked ? 'Bookmarked' : 'Bookmark'}
+              {isBookmarked ? "Bookmarked" : "Bookmark"}
             </Button>
 
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={handleShare}
-            >
+            <Button variant="outline" size="sm" onClick={handleShare}>
               <Share2 className="w-4 h-4 mr-2" />
               Share
             </Button>
 
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={toggleDarkMode}
-            >
-              {isDarkMode ? '☀️ Light' : '🌙 Dark'}
+            <Button variant="outline" size="sm" onClick={toggleDarkMode}>
+              {isDarkMode ? "☀️ Light" : "🌙 Dark"}
             </Button>
           </div>
         </div>
@@ -315,13 +323,15 @@ export default function QuestionPage({ params }: QuestionPageProps) {
                 ) : (
                   <Copy className="w-4 h-4 mr-2" />
                 )}
-                {isCopied ? 'Copied!' : 'Copy'}
+                {isCopied ? "Copied!" : "Copy"}
               </Button>
             </div>
           </div>
 
           <div className="relative">
-            <pre className={`line-numbers ${showFullCode ? '' : 'max-h-96 overflow-hidden'}`}>
+            <pre
+              className={`line-numbers ${showFullCode ? "" : "max-h-96 overflow-hidden"}`}
+            >
               <code className={`language-${selectedLanguage}`}>
                 {question.code}
               </code>
@@ -367,14 +377,11 @@ export default function QuestionPage({ params }: QuestionPageProps) {
             <Textarea
               ref={commentInputRef}
               value={newComment}
-              onChange={(e) => setNewComment(e.target.value)}
+              onChange={(e: { target: { value: SetStateAction<string>; }; }) => setNewComment(e.target.value)}
               placeholder="Add a comment..."
               className="w-full p-2 border rounded dark:bg-gray-700 dark:text-white"
             />
-            <Button
-              onClick={handleAddComment}
-              disabled={!newComment.trim()}
-            >
+            <Button onClick={handleAddComment} disabled={!newComment.trim()}>
               <MessageSquare className="w-4 h-4 mr-2" />
               Add Comment
             </Button>
@@ -393,7 +400,7 @@ export default function QuestionPage({ params }: QuestionPageProps) {
                   <div className="space-y-2">
                     <Textarea
                       value={editText}
-                      onChange={(e) => setEditText(e.target.value)}
+                      onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setEditText(e.target.value)}
                       className="w-full p-2 border rounded dark:bg-gray-700 dark:text-white"
                     />
                     <div className="flex space-x-2">
@@ -416,7 +423,9 @@ export default function QuestionPage({ params }: QuestionPageProps) {
                   <div>
                     <div className="flex justify-between items-start">
                       <div>
-                        <p className="font-semibold dark:text-white">{comment.author}</p>
+                        <p className="font-semibold dark:text-white">
+                          {comment.author}
+                        </p>
                         <p className="text-sm text-gray-500 dark:text-gray-400">
                           {new Date(comment.timestamp).toLocaleDateString()}
                           {comment.isEdited && " (edited)"}
@@ -439,7 +448,9 @@ export default function QuestionPage({ params }: QuestionPageProps) {
                         </Button>
                       </div>
                     </div>
-                    <p className="text-gray-800 dark:text-white">{comment.text}</p>
+                    <p className="text-gray-800 dark:text-white">
+                      {comment.text}
+                    </p>
                   </div>
                 )}
               </motion.div>
@@ -447,8 +458,6 @@ export default function QuestionPage({ params }: QuestionPageProps) {
           </AnimatePresence>
         </motion.div>
       </div>
-
-
 
       {/* Rest of your JSX remains the same */}
       {/* ... */}
