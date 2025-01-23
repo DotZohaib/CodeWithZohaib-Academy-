@@ -7,19 +7,10 @@ import {
   useEffect,
   useState,
   useRef,
-  SetStateAction
+  ChangeEvent
 } from "react";
 import "prismjs/themes/prism-tomorrow.css";
 import "prismjs/components/prism-typescript";
-import "prismjs/components/prism-javascript";
-import "prismjs/components/prism-jsx";
-import "prismjs/components/prism-tsx";
-import "prismjs/components/prism-css";
-import "prismjs/components/prism-json";
-import "prismjs/plugins/line-numbers/prism-line-numbers.js";
-import "prismjs/plugins/line-numbers/prism-line-numbers.css";
-import "prismjs/plugins/show-language/prism-show-language";
-import "prismjs/plugins/copy-to-clipboard/prism-copy-to-clipboard";
 import {
   CheckCircle,
   Copy,
@@ -32,12 +23,11 @@ import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Textarea } from "@/components/ui/textarea";
 
-type PageProps = {
-  params: {
-    id: string;
-  };
-  searchParams: { [key: string]: string | string[] | undefined };
-};
+interface Question {
+  id: number;
+  Title: string;
+  code: string;
+}
 
 interface Comment {
   id: number;
@@ -48,98 +38,72 @@ interface Comment {
   isEdited: boolean;
 }
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-export default function QuestionPage({ params, searchParams }: PageProps) {
+interface PageProps {
+  params: {
+    id: string;
+  };
+}
+
+export default function QuestionPage({ params }: PageProps) {
   const [id] = useState<string>(params.id);
-  const [isCopied, setIsCopied] = useState(false);
-  const [isBookmarked, setIsBookmarked] = useState(false);
-  const [showFullCode, setShowFullCode] = useState(false);
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const [selectedLanguage, setSelectedLanguage] = useState("typescript");
-  const [showNotification, setShowNotification] = useState(false);
-  const [notificationMessage, setNotificationMessage] = useState("");
+  const [isCopied, setIsCopied] = useState<boolean>(false);
+  const [isBookmarked, setIsBookmarked] = useState<boolean>(false);
+  const [showFullCode, setShowFullCode] = useState<boolean>(false);
+  const [showNotification, setShowNotification] = useState<boolean>(false);
+  const [notificationMessage, setNotificationMessage] = useState<string>("");
   const [comments, setComments] = useState<Comment[]>([]);
-  const [newComment, setNewComment] = useState("");
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const [newComment, setNewComment] = useState<string>("");
   const [isEditing, setIsEditing] = useState<number | null>(null);
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const [editText, setEditText] = useState("");
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const [isDarkMode, setIsDarkMode] = useState(false);
+  const [editText, setEditText] = useState<string>("");
 
   const commentInputRef = useRef<HTMLTextAreaElement>(null);
 
-  const question =
-    database.find(
-      (item: { id: number | null }) =>
-        item.id === (id ? parseInt(id, 10) : null)
-    ) ?? null;
+  const question: Question | null = database.find(
+    (item: any) => item.id === (id ? parseInt(id, 10) : null)
+  ) ?? null;
 
   useEffect(() => {
-    const handleDarkMode = () => {
-      if (typeof window !== "undefined") {
-        const darkMode = localStorage.getItem("darkMode") === "true";
-        setIsDarkMode(darkMode);
-        document.documentElement.classList.toggle("dark", darkMode);
+    const handleBookmarks = () => {
+      if (!id || typeof window === "undefined") return;
+      try {
+        const bookmarks: number[] = JSON.parse(localStorage.getItem("bookmarks") || "[]");
+        setIsBookmarked(bookmarks.includes(parseInt(id, 10)));
+        Prism.highlightAll();
+      } catch (error) {
+        console.error("Bookmark error:", error);
       }
     };
 
-    handleDarkMode();
-    window.addEventListener("storage", handleDarkMode);
-    return () => window.removeEventListener("storage", handleDarkMode);
-  }, []);
-
-  useEffect(() => {
-    if (!id || typeof window === "undefined") return;
-
-    try {
-      const bookmarks = JSON.parse(localStorage.getItem("bookmarks") || "[]");
-      setIsBookmarked(bookmarks.includes(parseInt(id)));
-    } catch (error) {
-      console.error("Error loading bookmarks:", error);
-      setIsBookmarked(false);
-    }
+    handleBookmarks();
+    window.addEventListener("storage", handleBookmarks);
+    return () => window.removeEventListener("storage", handleBookmarks);
   }, [id]);
 
-  useEffect(() => {
-    if (typeof window !== "undefined" && question?.code) {
-      const timeout = setTimeout(() => {
-        Prism.highlightAll();
-      }, 0);
-      return () => clearTimeout(timeout);
-    }
-  }, [question, selectedLanguage, showFullCode]);
-
-  const showNotificationWithTimeout = (message: string) => {
+  const showNotificationWithTimeout = (message: string): void => {
     setNotificationMessage(message);
     setShowNotification(true);
-    const timeout = setTimeout(() => setShowNotification(false), 3000);
-    return () => clearTimeout(timeout);
+    setTimeout(() => setShowNotification(false), 3000);
   };
 
-  const handleCopyCode = async () => {
+  const handleCopyCode = async (): Promise<void> => {
     if (!question?.code) return;
-
     try {
       await navigator.clipboard.writeText(question.code);
       setIsCopied(true);
-      showNotificationWithTimeout("Code copied to clipboard!");
+      showNotificationWithTimeout("Code copied!");
       setTimeout(() => setIsCopied(false), 2000);
     } catch (error) {
-      console.error("Failed to copy code:", error);
-      showNotificationWithTimeout("Failed to copy code!");
+      showNotificationWithTimeout("Copy failed!");
     }
   };
 
-  const handleBookmark = () => {
+  const handleBookmark = (): void => {
     if (typeof window === "undefined" || !id) return;
-
     try {
       const bookmarks: number[] = JSON.parse(
         localStorage.getItem("bookmarks") || "[]"
       );
       const parsedId = parseInt(id, 10);
-
       const updatedBookmarks = isBookmarked
         ? bookmarks.filter((bookmarkId) => bookmarkId !== parsedId)
         : [...bookmarks, parsedId];
@@ -147,37 +111,15 @@ export default function QuestionPage({ params, searchParams }: PageProps) {
       localStorage.setItem("bookmarks", JSON.stringify(updatedBookmarks));
       setIsBookmarked(!isBookmarked);
       showNotificationWithTimeout(
-        isBookmarked ? "Removed from bookmarks!" : "Added to bookmarks!"
+        isBookmarked ? "Removed from bookmarks" : "Added to bookmarks"
       );
     } catch (error) {
-      console.error("Failed to update bookmarks:", error);
-      showNotificationWithTimeout("Failed to update bookmarks!");
+      showNotificationWithTimeout("Bookmark error");
     }
   };
 
-  const handleShare = async () => {
-    if (typeof window === "undefined") return;
-
-    try {
-      if (navigator.share) {
-        await navigator.share({
-          title: question?.Title || "Question",
-          url: window.location.href,
-        });
-        showNotificationWithTimeout("Shared successfully!");
-      } else {
-        await navigator.clipboard.writeText(window.location.href);
-        showNotificationWithTimeout("URL copied to clipboard!");
-      }
-    } catch (error) {
-      console.error("Failed to share:", error);
-      showNotificationWithTimeout("Failed to share!");
-    }
-  };
-
-  const handleAddComment = () => {
+  const handleAddComment = (): void => {
     if (!newComment.trim()) return;
-
     const comment: Comment = {
       id: Date.now(),
       text: newComment.trim(),
@@ -186,13 +128,12 @@ export default function QuestionPage({ params, searchParams }: PageProps) {
       likes: 0,
       isEdited: false,
     };
-
     setComments((prev) => [...prev, comment]);
     setNewComment("");
-    showNotificationWithTimeout("Comment added successfully!");
+    showNotificationWithTimeout("Comment added!");
   };
 
-  const handleEditComment = (commentId: number) => {
+  const handleEditComment = (commentId: number): void => {
     const comment = comments.find((c) => c.id === commentId);
     if (comment) {
       setIsEditing(commentId);
@@ -200,11 +141,10 @@ export default function QuestionPage({ params, searchParams }: PageProps) {
     }
   };
 
-  const handleDeleteComment = (commentId: number) => {
+  const handleDeleteComment = (commentId: number): void => {
     setComments((prev) => prev.filter((comment) => comment.id !== commentId));
-    showNotificationWithTimeout("Comment deleted successfully!");
+    showNotificationWithTimeout("Comment deleted!");
   };
-
 
   if (!question) {
     return (
@@ -270,10 +210,6 @@ export default function QuestionPage({ params, searchParams }: PageProps) {
               )}
               {isBookmarked ? "Bookmarked" : "Bookmark"}
             </Button>
-            <Button variant="outline" size="sm" onClick={handleShare}>
-              <Share2 className="mr-2 h-4 w-4" />
-              Share
-            </Button>
           </div>
         </div>
 
@@ -283,7 +219,7 @@ export default function QuestionPage({ params, searchParams }: PageProps) {
           </h2>
           <div className="relative">
             <pre
-              className={`language-${selectedLanguage} ${
+              className={`language-typescript ${
                 showFullCode ? "overflow-y-auto" : "max-h-64 overflow-y-hidden"
               } line-numbers`}
             >
@@ -354,7 +290,7 @@ export default function QuestionPage({ params, searchParams }: PageProps) {
             <Textarea
               ref={commentInputRef}
               value={newComment}
-              onChange={(e: { target: { value: SetStateAction<string>; }; }) => setNewComment(e.target.value)}
+              onChange={(e: ChangeEvent<HTMLTextAreaElement>) => setNewComment(e.target.value)}
               placeholder="Add your comment..."
             />
             <Button onClick={handleAddComment} className="mt-2">
