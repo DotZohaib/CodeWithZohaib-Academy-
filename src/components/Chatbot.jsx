@@ -1,32 +1,42 @@
 'use client';
 import React, { useState, useEffect, useRef } from 'react';
-import { MessageCircle, Send, X, Bot, ArrowLeft, Mic, Smile, Sun, Moon, Code } from 'lucide-react';
-import EmojiPicker from 'emoji-picker-react';
+import { MessageCircle, Send, X, Bot, Mic, Smile, Sun, Moon } from 'lucide-react';
+import dynamic from 'next/dynamic';
 import ReactMarkdown from 'react-markdown';
+
+// Lazy load emoji picker
+const Picker = dynamic(
+  () => import('emoji-picker-react'),
+  { ssr: false }
+);
+
+interface Message {
+  sender: 'user' | 'bot';
+  text: string;
+  timestamp: Date;
+}
 
 const Chatbot = () => {
   const [isOpen, setIsOpen] = useState(false);
-  const [messages, setMessages] = useState([]);
+  const [messages, setMessages] = useState<Message[]>([]);
   const [userInput, setUserInput] = useState('');
-  const [userName, setUserName] = useState('');
   const [isTyping, setIsTyping] = useState(false);
-  const [showNameInput, setShowNameInput] = useState(true);
   const [unreadCount, setUnreadCount] = useState(0);
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
   const [darkMode, setDarkMode] = useState(false);
   const [isListening, setIsListening] = useState(false);
-  const messagesEndRef = useRef(null);
-  const recognition = useRef(null);
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+  const recognition = useRef<any>(null);
 
   // Speech recognition setup
   useEffect(() => {
-    if (typeof window !== 'undefined' && window.SpeechRecognition) {
+    if (typeof window !== 'undefined' && ('SpeechRecognition' in window || 'webkitSpeechRecognition' in window)) {
       const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
       recognition.current = new SpeechRecognition();
       recognition.current.continuous = false;
       recognition.current.interimResults = false;
 
-      recognition.current.onresult = (event) => {
+      recognition.current.onresult = (event: any) => {
         const transcript = event.results[0][0].transcript;
         setUserInput(prev => prev + ' ' + transcript);
         setIsListening(false);
@@ -38,15 +48,10 @@ const Chatbot = () => {
     }
   }, []);
 
-  // Message persistence
+  // Scroll to bottom of messages
   useEffect(() => {
-    const savedMessages = localStorage.getItem('chatMessages');
-    if (savedMessages) setMessages(JSON.parse(savedMessages));
-  }, []);
-
-  useEffect(() => {
-    localStorage.setItem('chatMessages', JSON.stringify(messages));
-  }, [messages]);
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [messages, isTyping]);
 
   // Typing animation
   const TypingIndicator = () => (
@@ -65,10 +70,10 @@ const Chatbot = () => {
   ];
 
   // Enhanced bot responses
-  const getBotResponse = (input) => {
+  const getBotResponse = (input: string): string => {
     const lowerInput = input.toLowerCase();
-    
-    const responses = {
+
+    const responses: { [key: string]: string } = {
       skills: `**Technical Skills:**\n- MERN Stack (MongoDB, Express, React, Node.js)\n- Python, Java, C++\n- AI/ML (TensorFlow, PyTorch)\n- Cybersecurity Tools\n\n**Professional Skills:**\n- Agile Development\n- DevOps CI/CD\n- Cloud Computing (AWS, Azure)`,
       experience: `**Professional Experience:**\n- 5+ years in full-stack development\n- Led 10+ projects from concept to deployment\n- Specialized in scalable web applications\n- Certified AWS Solutions Architect`,
       contact: `**Contact Information:**\n📧 Email: contact@dotzohaib.com\n📱 LinkedIn: linkedin.com/in/dotzohaib\n🌐 Portfolio: dotzohaib.tech`,
@@ -81,11 +86,38 @@ const Chatbot = () => {
     if (lowerInput.includes('contact')) return responses.contact;
     if (lowerInput.includes('skills')) return responses.skills;
     if (lowerInput.includes('code')) return responses.code;
-    
+
     return "I'm here to help! Feel free to ask about my skills, experience, or projects. 🤖";
   };
 
-  // Voice input handler
+  const handleSendMessage = async () => {
+    if (!userInput.trim()) return;
+
+    // Add user message
+    const newMessage: Message = {
+      sender: 'user',
+      text: userInput,
+      timestamp: new Date()
+    };
+
+    setMessages(prev => [...prev, newMessage]);
+    setUserInput('');
+    setShowEmojiPicker(false);
+
+    // Simulate bot response
+    setIsTyping(true);
+    setTimeout(() => {
+      const botResponse = getBotResponse(userInput);
+      const botMessage: Message = {
+        sender: 'bot',
+        text: botResponse,
+        timestamp: new Date()
+      };
+      setMessages(prev => [...prev, botMessage]);
+      setIsTyping(false);
+    }, 1500);
+  };
+
   const handleVoiceInput = () => {
     if (isListening) {
       recognition.current?.stop();
@@ -95,32 +127,40 @@ const Chatbot = () => {
     setIsListening(!isListening);
   };
 
-  // Emoji selection handler
-  const onEmojiClick = (emojiData) => {
-    setUserInput(prev => prev + emojiData.emoji);
+  const onEmojiClick = (emojiObject: any) => {
+    setUserInput(prev => prev + emojiObject.emoji);
     setShowEmojiPicker(false);
   };
 
-  // Message component with markdown support
-  const MessageBubble = ({ message }) => (
-    <div className={`p-3 rounded-2xl prose ${message.sender === 'user' ? 'bg-blue-600 text-white' : 'bg-white'}`}>
-      <ReactMarkdown components={{
-        code: ({node, ...props}) => <Code size={16} className="inline-block mr-1" {...props} />,
-        a: ({node, ...props}) => <a {...props} className="text-blue-500 underline" target="_blank" rel="noopener noreferrer" />
-      }}>
+  const MessageBubble = ({ message }: { message: Message }) => (
+    <div
+      className={`p-3 rounded-2xl max-w-[80%] ${
+        message.sender === 'user'
+          ? 'ml-auto bg-blue-600 text-white'
+          : 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-white'
+      }`}
+    >
+      <ReactMarkdown
+        components={{
+          code: ({ node, ...props }) => (
+            <code className="bg-gray-200 dark:bg-gray-600 p-1 rounded" {...props} />
+          )
+        }}
+      >
         {message.text}
       </ReactMarkdown>
-      <p className={`text-xs mt-1 ${message.sender === 'user' ? 'text-blue-100' : 'text-gray-500'}`}>
-        {message.time.toLocaleTimeString()}
-      </p>
+      <div className={`text-xs mt-1 ${message.sender === 'user' ? 'text-blue-100' : 'text-gray-500'}`}>
+        {message.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+      </div>
     </div>
   );
 
   return (
     <div className={`fixed bottom-4 right-4 z-50 ${darkMode ? 'dark' : ''}`}>
-      {/* Chat Window */}
       {isOpen && (
-        <div className={`w-[350px] h-[600px] rounded-2xl shadow-xl flex flex-col transition-all duration-300 ${darkMode ? 'bg-gray-900 text-white' : 'bg-white'}`}>
+        <div className={`w-[350px] h-[600px] rounded-2xl shadow-xl flex flex-col transition-all duration-300 ${
+          darkMode ? 'bg-gray-900 text-white' : 'bg-white'
+        }`}>
           {/* Header */}
           <div className="bg-gradient-to-r from-blue-600 to-purple-600 p-4 rounded-t-2xl">
             <div className="flex items-center justify-between">
@@ -151,7 +191,7 @@ const Chatbot = () => {
           {/* Chat Content */}
           <div className={`flex-1 overflow-y-auto p-4 ${darkMode ? 'bg-gray-800' : 'bg-gray-50'}`}>
             {messages.map((message, index) => (
-              <div key={index} className={`mb-4 animate-messageIn ${message.sender === 'user' ? 'text-right' : ''}`}>
+              <div key={index} className={`mb-4 ${message.sender === 'user' ? 'text-right' : ''}`}>
                 <MessageBubble message={message} />
                 {message.sender === 'bot' && index === messages.length - 1 && (
                   <div className="mt-2 flex gap-2 flex-wrap">
@@ -162,7 +202,7 @@ const Chatbot = () => {
                           setUserInput(reply);
                           handleSendMessage();
                         }}
-                        className="px-3 py-1 text-sm bg-blue-100 text-blue-800 rounded-full hover:bg-blue-200 transition-colors"
+                        className="px-3 py-1 text-sm bg-blue-100 text-blue-800 rounded-full hover:bg-blue-200 transition-colors dark:bg-blue-900 dark:text-blue-100"
                       >
                         {reply}
                       </button>
@@ -181,7 +221,7 @@ const Chatbot = () => {
               <div className="absolute left-2 bottom-2 flex gap-1">
                 <button
                   onClick={() => setShowEmojiPicker(!showEmojiPicker)}
-                  className="p-1 hover:bg-gray-200 rounded-full"
+                  className="p-1 hover:bg-gray-200 rounded-full dark:hover:bg-gray-600"
                 >
                   <Smile size={18} />
                 </button>
@@ -192,17 +232,23 @@ const Chatbot = () => {
                   <Mic size={18} />
                 </button>
               </div>
+
               {showEmojiPicker && (
-                <div className="absolute bottom-12 left-0 z-10">
-                  <EmojiPicker onEmojiClick={onEmojiClick} />
+                <div className="absolute bottom-14 left-0 z-10">
+                  <Picker onEmojiClick={onEmojiClick} />
                 </div>
               )}
+
               <input
                 value={userInput}
                 onChange={(e) => setUserInput(e.target.value)}
                 onKeyPress={(e) => e.key === 'Enter' && handleSendMessage()}
                 placeholder="Type your message..."
-                className="pl-10 pr-4 py-2 w-full rounded-full border focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className={`pl-10 pr-4 py-2 w-full rounded-full border focus:outline-none focus:ring-2 ${
+                  darkMode 
+                    ? 'bg-gray-700 border-gray-600 focus:ring-blue-500' 
+                    : 'bg-white border-gray-200 focus:ring-blue-500'
+                }`}
               />
               <button
                 onClick={handleSendMessage}
@@ -217,7 +263,10 @@ const Chatbot = () => {
 
       {/* Floating Button */}
       <button
-        onClick={() => setIsOpen(!isOpen)}
+        onClick={() => {
+          setIsOpen(!isOpen);
+          setUnreadCount(0);
+        }}
         className="mt-4 relative group animate-bounce-slow"
       >
         <div className="w-16 h-16 bg-gradient-to-r from-blue-600 to-purple-600 rounded-full shadow-lg flex items-center justify-center text-white hover:from-blue-700 hover:to-purple-700 transition-all">
@@ -229,37 +278,6 @@ const Chatbot = () => {
           </div>
         )}
       </button>
-
-      <style jsx global>{`
-        @keyframes messageIn {
-          from { transform: translateY(20px); opacity: 0; }
-          to { transform: translateY(0); opacity: 1; }
-        }
-        
-        .dot-flashing {
-          position: relative;
-          width: 10px;
-          height: 10px;
-          border-radius: 5px;
-          background-color: #3b82f6;
-          animation: dotFlashing 1s infinite linear alternate;
-        }
-        
-        @keyframes dotFlashing {
-          0% { opacity: 0.3; transform: translateY(0); }
-          50% { opacity: 1; transform: translateY(-3px); }
-          100% { opacity: 0.3; transform: translateY(0); }
-        }
-
-        .animate-bounce-slow {
-          animation: bounce 2s infinite;
-        }
-
-        @keyframes bounce {
-          0%, 100% { transform: translateY(0); }
-          50% { transform: translateY(-10px); }
-        }
-      `}</style>
     </div>
   );
 };
