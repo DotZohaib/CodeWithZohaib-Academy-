@@ -10,11 +10,6 @@ const Picker = dynamic(
   { ssr: false }
 );
 
-interface Message {
-  sender: 'user' | 'bot';
-  text: string;
-  timestamp: Date;
-}
 
 const Chatbot = () => {
   const [isOpen, setIsOpen] = useState(false);
