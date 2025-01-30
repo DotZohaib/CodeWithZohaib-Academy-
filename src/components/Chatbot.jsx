@@ -1,29 +1,8 @@
-"use client";
 import React, { useState, useEffect, useRef } from "react";
 import {
-  MessageCircle,
-  Send,
-  X,
-  Bot,
-  Mic,
-  Smile,
-  Sun,
-  Moon,
-  Download,
-  Award,
-  Briefcase,
-  School,
-  Code2,
-  Github,
-  Linkedin,
-  Mail,
-  Globe,
-  Calendar,
-  Clock,
-  Language,
-  Heart,
-  Coffee,
-  Music,
+  MessageCircle, Send, X, Bot, Code2, Briefcase, Award,
+  Mail, Heart, Sun, Moon, Settings, Link, Image,
+  FileText, Video, Clock
 } from "lucide-react";
 
 const Chatbot = () => {
@@ -33,16 +12,14 @@ const Chatbot = () => {
   const [userInput, setUserInput] = useState("");
   const [isTyping, setIsTyping] = useState(false);
   const [darkMode, setDarkMode] = useState(false);
-  const [isListening, setIsListening] = useState(false);
-  const [showEmojiPicker, setShowEmojiPicker] = useState(false);
-  const [isSpeaking, setIsSpeaking] = useState(false);
   const [theme, setTheme] = useState("blue");
+  const [isMinimized, setIsMinimized] = useState(false);
+  const [showAttachments, setShowAttachments] = useState(false);
   const messagesEndRef = useRef(null);
-  const speechRecognition = useRef(null);
 
   // Personal information data
   const personalInfo = {
-    name: "Your Name",
+    name: "ZOHAIB ALI",
     title: "Full Stack Developer & AI Enthusiast",
     location: "City, Country",
     languages: ["English", "Arabic", "French"],
@@ -138,20 +115,12 @@ const Chatbot = () => {
     },
   };
 
-  // Animation classes
-  const animations = {
-    container: "animate-fade-in-up",
-    message: "animate-slide-in",
-    button: "animate-pulse hover:animate-bounce",
-    icon: "animate-spin-slow hover:animate-ping",
-  };
-
-  // Theme colors
+  // Theme colors with gradients
   const themes = {
-    blue: "from-blue-600 to-purple-600",
-    green: "from-green-600 to-teal-600",
-    red: "from-red-600 to-pink-600",
-    orange: "from-orange-600 to-yellow-600",
+    blue: "from-blue-600 via-blue-700 to-indigo-800",
+    green: "from-green-600 via-green-700 to-teal-800",
+    red: "from-red-600 via-red-700 to-pink-800",
+    orange: "from-orange-600 via-orange-700 to-yellow-800",
   };
 
   // Helper function to get enhanced response based on user input
@@ -188,325 +157,271 @@ const Chatbot = () => {
     // Default response
     return {
       content:
-        "Hi! I can tell you about my skills, experience, projects, or how to contact me. What would you like to know?",
+        "I can tell you about my skills, experience, projects, or how to contact me. What would you like to know?",
       icon: <Bot className="animate-pulse" />,
-      options: [
-        "Tell me about your skills",
-        "What's your experience?",
-        "Show me your projects",
-        "How can I contact you?",
-      ],
     };
   };
 
-  // Speech recognition setup
-  useEffect(() => {
-    if ("SpeechRecognition" in window || "webkitSpeechRecognition" in window) {
-      const SpeechRecognition =
-        window.SpeechRecognition || window.webkitSpeechRecognition;
-      speechRecognition.current = new SpeechRecognition();
-      speechRecognition.current.continuous = false;
-      speechRecognition.current.interimResults = false;
+  const handleSendMessage = async () => {
+    if (!userInput.trim()) return;
 
-      speechRecognition.current.onresult = (event) => {
-        const transcript = event.results[0][0].transcript;
-        setUserInput(transcript);
-        handleSendMessage(transcript);
-      };
-    }
-  }, []);
-
-  // Auto-scroll to bottom
-  useEffect(() => {
-    scrollToBottom();
-  }, [messages]);
-
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  };
-
-  // Handle voice input
-  const toggleVoiceInput = () => {
-    if (isListening) {
-      speechRecognition.current?.stop();
-    } else {
-      speechRecognition.current?.start();
-    }
-    setIsListening(!isListening);
-  };
-
-  // Text-to-speech output
-  const speak = (text) => {
-    if ("speechSynthesis" in window) {
-      const utterance = new SpeechSynthesisUtterance(text);
-      window.speechSynthesis.speak(utterance);
-      setIsSpeaking(true);
-      utterance.onend = () => setIsSpeaking(false);
-    }
-  };
-
-  // Enhanced message handling
-  const handleSendMessage = async (voiceInput = null) => {
-    const input = voiceInput || userInput;
-    if (!input.trim()) return;
-
+    // Add user message
     const newUserMessage = {
-      content: input,
+      content: userInput,
       sender: "user",
       timestamp: new Date(),
-      animate: true,
+      id: Date.now(),
     };
-
     setMessages((prev) => [...prev, newUserMessage]);
     setUserInput("");
     setIsTyping(true);
 
-    // Simulate AI thinking delay
-    setTimeout(() => {
-      const response = getEnhancedResponse(input);
-      setMessages((prev) => [
-        ...prev,
-        {
-          ...response,
-          sender: "bot",
-          timestamp: new Date(),
-          animate: true,
-        },
-      ]);
-      setIsTyping(false);
+    // Get bot response based on input
+    const response = getEnhancedResponse(userInput);
 
-      // Optional: Speak the response
-      if (isSpeaking) {
-        speak(response.content);
-      }
-    }, Math.random() * 1000 + 500);
+    // Simulate typing delay
+    setTimeout(() => {
+      const botResponse = {
+        content: response.content,
+        sender: "bot",
+        timestamp: new Date(),
+        id: Date.now() + 1,
+        icon: response.icon,
+      };
+      setMessages((prev) => [...prev, botResponse]);
+      setIsTyping(false);
+    }, 1500);
   };
 
-  // Message bubble component with enhanced animations
-  const MessageBubble = ({ message }) => (
-    <div
-      className={`relative p-4 rounded-3xl max-w-[85%] shadow-lg transform transition-all duration-300
-        ${message.animate ? animations.message : ""}
-        ${
-          message.sender === "user"
-            ? `ml-auto bg-gradient-to-br ${themes[theme]} text-white`
-            : `bg-gradient-to-tl from-gray-100 to-white text-gray-800
-             dark:from-gray-700 dark:to-gray-800 dark:text-white`
-        }`}
-    >
-      <div className="flex items-start gap-3">
-        {message.icon && <div className={animations.icon}>{message.icon}</div>}
-        <div className="whitespace-pre-line markdown">
-          {message.content.split("\n").map((line, i) => (
-            <p key={i} className={`mb-2 ${animations.container}`}>
+  // Message bubble component with Markdown support
+  const MessageBubble = ({ message }) => {
+    const formatContent = (content) => {
+      return content.split("\n").map((line, index) => {
+        if (line.startsWith("**") && line.endsWith("**")) {
+          return (
+            <h3 key={index} className="font-bold text-lg mb-2">
+              {line.replace(/\*\*/g, "")}
+            </h3>
+          );
+        }
+        if (line.startsWith("•")) {
+          return (
+            <li key={index} className="ml-6 mb-1">
               {line}
-            </p>
-          ))}
-        </div>
-      </div>
-      {message.options && (
-        <div className="mt-3 flex flex-wrap gap-2">
-          {message.options.map((option, i) => (
-            <button
-              key={i}
-              onClick={() => {
-                setUserInput(option);
-                handleSendMessage();
-              }}
-              className={`px-3 py-1 text-sm bg-black/10 rounded-full
-                hover:bg-black/20 transition-all ${animations.button}`}
-            >
-              {option}
-            </button>
-          ))}
-        </div>
-      )}
-      <div className="text-xs mt-2 opacity-75 flex items-center gap-1">
-        <Clock size={12} />
-        {new Date(message.timestamp).toLocaleTimeString()}
-      </div>
-    </div>
-  );
+            </li>
+          );
+        }
+        if (line.startsWith("-")) {
+          return (
+            <li key={index} className="ml-4 mb-1">
+              {line.substring(1)}
+            </li>
+          );
+        }
+        return (
+          <p key={index} className="mb-1">
+            {line}
+          </p>
+        );
+      });
+    };
 
- return (
-    <div className={`fixed bottom-4 right-4 z-50 ${darkMode ? "dark" : ""}`}>
-      <style>
-        {`
-          @media (max-width: 640px) {
-            .chat-container {
-              width: 90vw;
-              height: 80vh;
-              max-width: 100%;
-              right: 50%;
-              transform: translateX(50%);
-              bottom: 20px;
-            }
-            
-            .message-content {
-              font-size: 14px;
-            }
-            
-            .input-container {
-              flex-direction: column;
-              gap: 8px;
-            }
-            
-            .theme-button {
-              display: none;
-            }
-          }
-        `}
-      </style>
+    return (
+      <div
+        className={`group flex items-start gap-2 mb-4 ${
+          message.sender === "user" ? "justify-end" : "justify-start"
+        }`}
+      >
+        {message.sender === "bot" && (
+          <div
+            className={`w-8 h-8 rounded-full bg-gradient-to-r ${themes[theme]} p-1.5 animate-bounce-slow`}
+          >
+            {message.icon || <Bot className="text-white w-full h-full" />}
+          </div>
+        )}
 
+        <div
+          className={`relative max-w-[80%] p-4 rounded-2xl shadow-lg
+            ${
+              message.sender === "user"
+                ? `bg-gradient-to-r ${themes[theme]} text-white ml-auto`
+                : "bg-white dark:bg-gray-800 dark:text-white"
+            }
+            transform transition-all duration-300 hover:scale-[1.02]
+            animate-fade-in-up`}
+        >
+          <div className="text-sm sm:text-base">
+            {formatContent(message.content)}
+          </div>
+          <div className="flex items-center gap-1 text-xs opacity-70 mt-2">
+            <Clock className="w-3 h-3" />
+            {new Date(message.timestamp).toLocaleTimeString()}
+          </div>
+        </div>
+
+        {message.sender === "user" && (
+          <div
+            className={`w-8 h-8 rounded-full bg-gradient-to-r ${themes[theme]} p-1.5 animate-bounce-slow`}
+          >
+            <div className="w-full h-full rounded-full bg-white/30" />
+          </div>
+        )}
+      </div>
+    );
+  };
+
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [messages]);
+
+  return (
+    <div
+      className={`fixed z-50 ${darkMode ? "dark" : ""}
+      ${
+        isOpen
+          ? "inset-0 sm:inset-auto sm:bottom-4 sm:right-4"
+          : "bottom-4 right-4"
+      }`}
+    >
       {isOpen && (
-        <div className="chat-container w-[400px] h-[600px] sm:w-[350px] sm:h-[500px] bg-white dark:bg-gray-900 rounded-2xl shadow-2xl flex flex-col animate-fade-in-up">
+        <div
+          className={`flex flex-col bg-gray-50 dark:bg-gray-900
+          ${isOpen ? "fixed inset-0 sm:absolute sm:bottom-16 sm:right-0" : ""}
+          ${isMinimized ? "h-20" : "h-full sm:h-[600px]"}
+          sm:w-[400px] rounded-lg shadow-2xl animate-fade-in-up`}
+        >
           {/* Header */}
-          <div className={`bg-gradient-to-r ${themes[theme]} p-4 rounded-t-2xl flex items-center justify-between`}>
+          <div
+            className={`flex items-center justify-between p-4 bg-gradient-to-r ${themes[theme]} text-white rounded-t-lg`}
+          >
             <div className="flex items-center gap-3">
-              <Bot className="text-white w-6 h-6 sm:w-8 sm:h-8" />
+              <div className="w-10 h-10 rounded-full bg-white/20 p-2 animate-bounce-slow">
+                <Bot className="w-full h-full" />
+              </div>
               <div>
-                <h3 className="font-bold text-white text-sm sm:text-base">{personalInfo.name}</h3>
-                <p className="text-xs sm:text-sm text-white/80 flex items-center gap-1">
-                  <span className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></span>
+                <h3 className="font-bold">{personalInfo.name}</h3>
+                <p className="text-xs flex items-center gap-2">
+                  <span className="w-2 h-2 rounded-full bg-green-400 animate-pulse"></span>
                   {personalInfo.title}
                 </p>
               </div>
             </div>
-            <div className="flex gap-2">
-              <button
-                onClick={() => setTheme(Object.keys(themes)[(Object.keys(themes).indexOf(theme) + 1) % Object.keys(themes).length])}
-                className="theme-button p-2 hover:bg-white/10 rounded-full transition-all"
-              >
-                <Coffee className="text-white w-4 h-4 sm:w-6 sm:h-6" />
-              </button>
+
+            <div className="flex items-center gap-2">
               <button
                 onClick={() => setDarkMode(!darkMode)}
-                className="p-2 hover:bg-white/10 rounded-full transition-all"
+                className="p-2 hover:bg-white/20 rounded-full transition-all"
               >
                 {darkMode ? (
-                  <Sun className="text-white w-4 h-4 sm:w-6 sm:h-6" />
+                  <Sun className="w-5 h-5" />
                 ) : (
-                  <Moon className="text-white w-4 h-4 sm:w-6 sm:h-6" />
+                  <Moon className="w-5 h-5" />
                 )}
               </button>
               <button
+                onClick={() => setIsMinimized(!isMinimized)}
+                className="p-2 hover:bg-white/20 rounded-full transition-all"
+              >
+                <Settings className="w-5 h-5" />
+              </button>
+              <button
                 onClick={() => setIsOpen(false)}
-                className="p-2 hover:bg-white/10 rounded-full transition-all"
+                className="p-2 hover:bg-white/20 rounded-full transition-all"
               >
-                <X className="text-white w-4 h-4 sm:w-6 sm:h-6" />
+                <X className="w-5 h-5" />
               </button>
             </div>
           </div>
 
-          {/* Messages Area */}
-          <div className="flex-1 p-4 overflow-y-auto">
-            {messages.map((message, index) => (
-              <div key={index} className="mb-4">
-                <MessageBubble message={message} />
-              </div>
-            ))}
-            {isTyping && (
-              <div className="flex gap-2 text-gray-400">
-                <div className="animate-bounce">●</div>
-                <div className="animate-bounce delay-100">●</div>
-                <div className="animate-bounce delay-200">●</div>
-              </div>
-            )}
-            <div ref={messagesEndRef} />
-          </div>
-
-          {/* Input Area */}
-          <div className="p-4 border-t dark:border-gray-700">
-            <div className="input-container relative flex items-center gap-2">
-              <button
-                onClick={toggleVoiceInput}
-                className={`p-2 rounded-full transition-all ${
-                  isListening ? "text-red-500 animate-pulse" : "text-gray-400"
-                }`}
-              >
-                <Mic className="w-4 h-4 sm:w-6 sm:h-6" />
-              </button>
-              <input
-                type="text"
-                value={userInput}
-                onChange={(e) => setUserInput(e.target.value)}
-                onKeyPress={(e) => e.key === "Enter" && handleSendMessage()}
-                placeholder="Type your message..."
-                className="w-full px-4 py-2 text-sm sm:text-base rounded-xl border dark:border-gray-700
-                  dark:bg-gray-800 focus:outline-none focus:border-blue-500"
-              />
-              <button
-                onClick={() => handleSendMessage()}
-                className={`p-2 text-white bg-gradient-to-r ${themes[theme]}
-                  rounded-xl hover:opacity-90 transition-all`}
-              >
-                <Send className="w-4 h-4 sm:w-6 sm:h-6" />
-              </button>
+          {/* Messages area */}
+          {!isMinimized && (
+            <div className="flex-1 overflow-y-auto p-4">
+              {messages.map((message) => (
+                <MessageBubble key={message.id} message={message} />
+              ))}
+              {isTyping && (
+                <div className="flex gap-2 p-3">
+                  <div className="w-2 h-2 rounded-full bg-gray-400 animate-bounce"></div>
+                  <div className="w-2 h-2 rounded-full bg-gray-400 animate-bounce delay-100"></div>
+                  <div className="w-2 h-2 rounded-full bg-gray-400 animate-bounce delay-200"></div>
+                </div>
+              )}
+              <div ref={messagesEndRef} />
             </div>
-          </div>
+          )}
+
+          {/* Input area */}
+          {!isMinimized && (
+            <div className="p-4 border-t dark:border-gray-700">
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => setShowAttachments(!showAttachments)}
+                  className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800
+                    transition-all animate-pulse"
+                >
+                  <Link className="w-5 h-5 text-gray-500" />
+                </button>
+
+                <div className="flex-1 relative">
+                  <input
+                    type="text"
+                    value={userInput}
+                    onChange={(e) => setUserInput(e.target.value)}
+                    onKeyPress={(e) => e.key === "Enter" && handleSendMessage()}
+                    placeholder="Ask about skills, experience, projects..."
+                    className="w-full px-4 py-2 rounded-full border dark:border-gray-700
+                      dark:bg-gray-800 dark:text-white focus:outline-none focus:ring-2
+                      focus:ring-blue-500"
+                  />
+
+                  {showAttachments && (
+                    <div
+                      className="absolute bottom-full mb-2 left-0 bg-white dark:bg-gray-800
+                      rounded-lg shadow-lg border dark:border-gray-700 p-2"
+                    >
+                      <div className="flex gap-2">
+                        <button className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg">
+                          <Image className="w-5 h-5 text-gray-500" />
+                        </button>
+                        <button className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg">
+                          <FileText className="w-5 h-5 text-gray-500" />
+                        </button>
+                        <button className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg">
+                          <Video className="w-5 h-5 text-gray-500" />
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                <button
+                  onClick={handleSendMessage}
+                  disabled={!userInput.trim()}
+                  className={`p-2 rounded-full bg-gradient-to-r ${themes[theme]}
+                    disabled:opacity-50 disabled:cursor-not-allowed
+                    hover:opacity-90 transition-all animate-pulse`}
+                >
+                  <Send className="w-5 h-5 text-white" />
+                </button>
+              </div>
+            </div>
+          )}
         </div>
       )}
 
-      {/* Floating Button */}
-      <button
-        onClick={() => setIsOpen(!isOpen)}
-        className={`w-12 h-12 sm:w-14 sm:h-14 bg-gradient-to-r ${themes[theme]} rounded-full
-          shadow-lg flex items-center justify-center text-white
-          hover:shadow-xl transition-all animate-pulse`}
-      >
-        {isOpen ? (
-          <X className="w-6 h-6 sm:w-8 sm:h-8" />
-        ) : (
-          <MessageCircle className="w-6 h-6 sm:w-8 sm:h-8" />
-        )}
-      </button>
+      {/* Floating action button */}
+      {!isOpen && (
+        <button
+          onClick={() => setIsOpen(true)}
+          className={`fixed bottom-4 right-4 w-14 h-14 rounded-full
+            bg-gradient-to-r ${themes[theme]} text-white shadow-lg
+            hover:shadow-xl transition-all ${Animation.pulse}`}
+        >
+          <MessageCircle className="w-6 h-6 mx-auto" />
+        </button>
+      )}
     </div>
   );
 };
-
-// Enhanced MessageBubble component with responsive text
-const MessageBubble = ({ message }) => (
-  <div
-    className={`relative p-3 sm:p-4 rounded-3xl max-w-[95%] sm:max-w-[85%] shadow-lg transform transition-all duration-300
-      ${message.animate ? "animate-slide-in" : ""}
-      ${
-        message.sender === "user"
-          ? `ml-auto bg-gradient-to-br ${themes[theme]} text-white`
-          : `bg-gradient-to-tl from-gray-100 to-white text-gray-800
-            dark:from-gray-700 dark:to-gray-800 dark:text-white`
-      }`}
-  >
-    <div className="flex items-start gap-2 sm:gap-3">
-      {message.icon && <div className="w-4 h-4 sm:w-6 sm:h-6">{message.icon}</div>}
-      <div className="whitespace-pre-line text-sm sm:text-base">
-        {message.content.split("\n").map((line, i) => (
-          <p key={i} className="mb-1 sm:mb-2">
-            {line}
-          </p>
-        ))}
-      </div>
-    </div>
-    {message.options && (
-      <div className="mt-2 sm:mt-3 flex flex-wrap gap-1 sm:gap-2">
-        {message.options.map((option, i) => (
-          <button
-            key={i}
-            onClick={() => {
-              setUserInput(option);
-              handleSendMessage();
-            }}
-            className="px-2 py-1 text-xs sm:text-sm bg-black/10 rounded-full hover:bg-black/20 transition-all"
-          >
-            {option}
-          </button>
-        ))}
-      </div>
-    )}
-    <div className="text-[10px] sm:text-xs mt-1 sm:mt-2 opacity-75 flex items-center gap-1">
-      <Clock className="w-3 h-3 sm:w-4 sm:h-4" />
-      {new Date(message.timestamp).toLocaleTimeString()}
-    </div>
-  </div>
-);
 
 export default Chatbot;
