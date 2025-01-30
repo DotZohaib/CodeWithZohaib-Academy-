@@ -328,65 +328,45 @@ const Chatbot = () => {
     </div>
   );
 
-  return (
+ return (
     <div className={`fixed bottom-4 right-4 z-50 ${darkMode ? "dark" : ""}`}>
       <style>
         {`
-          @keyframes fade-in-up {
-            0% { opacity: 0; transform: translateY(20px); }
-            100% { opacity: 1; transform: translateY(0); }
-          }
-
-          @keyframes slide-in {
-            0% { opacity: 0; transform: translateX(20px); }
-            100% { opacity: 1; transform: translateX(0); }
-          }
-
-          @keyframes spin-slow {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-          }
-
-          .animate-fade-in-up {
-            animation: fade-in-up 0.5s ease-out forwards;
-          }
-
-          .animate-slide-in {
-            animation: slide-in 0.3s ease-out forwards;
-          }
-
-          .animate-spin-slow {
-            animation: spin-slow 3s linear infinite;
-          }
-
-          .markdown strong {
-            color: inherit;
-            font-weight: 600;
-          }
-
-          .markdown code {
-            background: rgba(0,0,0,0.1);
-            padding: 2px 4px;
-            border-radius: 4px;
+          @media (max-width: 640px) {
+            .chat-container {
+              width: 90vw;
+              height: 80vh;
+              max-width: 100%;
+              right: 50%;
+              transform: translateX(50%);
+              bottom: 20px;
+            }
+            
+            .message-content {
+              font-size: 14px;
+            }
+            
+            .input-container {
+              flex-direction: column;
+              gap: 8px;
+            }
+            
+            .theme-button {
+              display: none;
+            }
           }
         `}
       </style>
 
       {isOpen && (
-        <div
-          className={`w-[400px] h-[600px] bg-white dark:bg-gray-900 rounded-2xl
-          shadow-2xl flex flex-col ${animations.container}`}
-        >
+        <div className="chat-container w-[400px] h-[600px] sm:w-[350px] sm:h-[500px] bg-white dark:bg-gray-900 rounded-2xl shadow-2xl flex flex-col animate-fade-in-up">
           {/* Header */}
-          <div
-            className={`bg-gradient-to-r ${themes[theme]} p-4 rounded-t-2xl
-            flex items-center justify-between`}
-          >
+          <div className={`bg-gradient-to-r ${themes[theme]} p-4 rounded-t-2xl flex items-center justify-between`}>
             <div className="flex items-center gap-3">
-              <Bot className={`text-white ${animations.icon}`} size={24} />
+              <Bot className="text-white w-6 h-6 sm:w-8 sm:h-8" />
               <div>
-                <h3 className="font-bold text-white">{personalInfo.name}</h3>
-                <p className="text-sm text-white/80 flex items-center gap-1">
+                <h3 className="font-bold text-white text-sm sm:text-base">{personalInfo.name}</h3>
+                <p className="text-xs sm:text-sm text-white/80 flex items-center gap-1">
                   <span className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></span>
                   {personalInfo.title}
                 </p>
@@ -394,33 +374,26 @@ const Chatbot = () => {
             </div>
             <div className="flex gap-2">
               <button
-                onClick={() =>
-                  setTheme(
-                    Object.keys(themes)[
-                      (Object.keys(themes).indexOf(theme) + 1) %
-                        Object.keys(themes).length
-                    ]
-                  )
-                }
-                className="p-2 hover:bg-white/10 rounded-full transition-all"
+                onClick={() => setTheme(Object.keys(themes)[(Object.keys(themes).indexOf(theme) + 1) % Object.keys(themes).length])}
+                className="theme-button p-2 hover:bg-white/10 rounded-full transition-all"
               >
-                <Coffee className="text-white" />
+                <Coffee className="text-white w-4 h-4 sm:w-6 sm:h-6" />
               </button>
               <button
                 onClick={() => setDarkMode(!darkMode)}
                 className="p-2 hover:bg-white/10 rounded-full transition-all"
               >
                 {darkMode ? (
-                  <Sun className="text-white" />
+                  <Sun className="text-white w-4 h-4 sm:w-6 sm:h-6" />
                 ) : (
-                  <Moon className="text-white" />
+                  <Moon className="text-white w-4 h-4 sm:w-6 sm:h-6" />
                 )}
               </button>
               <button
                 onClick={() => setIsOpen(false)}
                 className="p-2 hover:bg-white/10 rounded-full transition-all"
               >
-                <X className="text-white" />
+                <X className="text-white w-4 h-4 sm:w-6 sm:h-6" />
               </button>
             </div>
           </div>
@@ -444,14 +417,14 @@ const Chatbot = () => {
 
           {/* Input Area */}
           <div className="p-4 border-t dark:border-gray-700">
-            <div className="relative flex items-center gap-2">
+            <div className="input-container relative flex items-center gap-2">
               <button
                 onClick={toggleVoiceInput}
                 className={`p-2 rounded-full transition-all ${
                   isListening ? "text-red-500 animate-pulse" : "text-gray-400"
                 }`}
               >
-                <Mic size={20} />
+                <Mic className="w-4 h-4 sm:w-6 sm:h-6" />
               </button>
               <input
                 type="text"
@@ -459,15 +432,15 @@ const Chatbot = () => {
                 onChange={(e) => setUserInput(e.target.value)}
                 onKeyPress={(e) => e.key === "Enter" && handleSendMessage()}
                 placeholder="Type your message..."
-                className="w-full px-4 py-2 rounded-xl border dark:border-gray-700
+                className="w-full px-4 py-2 text-sm sm:text-base rounded-xl border dark:border-gray-700
                   dark:bg-gray-800 focus:outline-none focus:border-blue-500"
               />
               <button
                 onClick={() => handleSendMessage()}
                 className={`p-2 text-white bg-gradient-to-r ${themes[theme]}
-                  rounded-xl hover:opacity-90 transition-all ${animations.button}`}
+                  rounded-xl hover:opacity-90 transition-all`}
               >
-                <Send size={20} />
+                <Send className="w-4 h-4 sm:w-6 sm:h-6" />
               </button>
             </div>
           </div>
@@ -477,18 +450,63 @@ const Chatbot = () => {
       {/* Floating Button */}
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className={`w-14 h-14 bg-gradient-to-r ${themes[theme]} rounded-full
+        className={`w-12 h-12 sm:w-14 sm:h-14 bg-gradient-to-r ${themes[theme]} rounded-full
           shadow-lg flex items-center justify-center text-white
-          hover:shadow-xl transition-all ${animations.button}`}
+          hover:shadow-xl transition-all animate-pulse`}
       >
         {isOpen ? (
-          <X size={24} className="animate-spin-slow" />
+          <X className="w-6 h-6 sm:w-8 sm:h-8" />
         ) : (
-          <MessageCircle size={24} className="animate-pulse" />
+          <MessageCircle className="w-6 h-6 sm:w-8 sm:h-8" />
         )}
       </button>
     </div>
   );
 };
+
+// Enhanced MessageBubble component with responsive text
+const MessageBubble = ({ message }) => (
+  <div
+    className={`relative p-3 sm:p-4 rounded-3xl max-w-[95%] sm:max-w-[85%] shadow-lg transform transition-all duration-300
+      ${message.animate ? "animate-slide-in" : ""}
+      ${
+        message.sender === "user"
+          ? `ml-auto bg-gradient-to-br ${themes[theme]} text-white`
+          : `bg-gradient-to-tl from-gray-100 to-white text-gray-800
+            dark:from-gray-700 dark:to-gray-800 dark:text-white`
+      }`}
+  >
+    <div className="flex items-start gap-2 sm:gap-3">
+      {message.icon && <div className="w-4 h-4 sm:w-6 sm:h-6">{message.icon}</div>}
+      <div className="whitespace-pre-line text-sm sm:text-base">
+        {message.content.split("\n").map((line, i) => (
+          <p key={i} className="mb-1 sm:mb-2">
+            {line}
+          </p>
+        ))}
+      </div>
+    </div>
+    {message.options && (
+      <div className="mt-2 sm:mt-3 flex flex-wrap gap-1 sm:gap-2">
+        {message.options.map((option, i) => (
+          <button
+            key={i}
+            onClick={() => {
+              setUserInput(option);
+              handleSendMessage();
+            }}
+            className="px-2 py-1 text-xs sm:text-sm bg-black/10 rounded-full hover:bg-black/20 transition-all"
+          >
+            {option}
+          </button>
+        ))}
+      </div>
+    )}
+    <div className="text-[10px] sm:text-xs mt-1 sm:mt-2 opacity-75 flex items-center gap-1">
+      <Clock className="w-3 h-3 sm:w-4 sm:h-4" />
+      {new Date(message.timestamp).toLocaleTimeString()}
+    </div>
+  </div>
+);
 
 export default Chatbot;
