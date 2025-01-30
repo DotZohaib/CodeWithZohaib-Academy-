@@ -1,9 +1,95 @@
 import React, { useState, useEffect, useRef } from "react";
 import {
-  MessageCircle, Send, X, Bot, Code2, Briefcase, Award,
-  Mail, Heart, Sun, Moon, Settings, Link, Image,
-  FileText, Video, Clock
+  MessageCircle,
+  Send,
+  X,
+  Bot,
+  Mic,
+  Sun,
+  Moon,
+  Clock,
+  Coffee,
+  Code2,
+  Briefcase,
+  Award,
+  Mail,
+  Heart,
 } from "lucide-react";
+
+// Animated Candle Component
+const AnimatedCandle = ({ darkMode }) => (
+  <div className="candle-container absolute inset-0 overflow-hidden pointer-events-none">
+    <style>
+      {`
+        .candle {
+          position: absolute;
+          left: 50%;
+          bottom: 20%;
+          width: 30px;
+          height: 100px;
+          background: ${darkMode ? '#fff' : '#000'};
+          border-radius: 4px;
+          transform: translateX(-50%);
+          box-shadow: 0 0 20px rgba(${darkMode ? '255,255,255,0.2' : '0,0,0,0.2'});
+        }
+
+        .flame-wrapper {
+          position: absolute;
+          left: 50%;
+          bottom: 100%;
+          transform: translateX(-50%);
+        }
+
+        .flame {
+          position: relative;
+          width: 15px;
+          height: 30px;
+          background: #ff9800;
+          border-radius: 50% 50% 20% 20%;
+          transform-origin: center bottom;
+          animation: flicker 1s ease-in-out infinite alternate;
+          box-shadow: 0 0 20px #ff9800, 0 0 40px #ff6600;
+        }
+
+        .spark {
+          position: absolute;
+          width: 3px;
+          height: 3px;
+          background: #ffeb3b;
+          border-radius: 50%;
+          animation: spark 2s ease-in-out infinite;
+          opacity: 0;
+        }
+
+        .spark:nth-child(1) { left: -10px; animation-delay: 0.2s; }
+        .spark:nth-child(2) { left: 10px; animation-delay: 0.7s; }
+        .spark:nth-child(3) { left: 0; animation-delay: 1.2s; }
+
+        @keyframes flicker {
+          0%, 100% { transform: scale(1) rotate(-2deg); }
+          25% { transform: scale(1.1) rotate(2deg); }
+          50% { transform: scale(0.9) rotate(-1deg); }
+          75% { transform: scale(1.05) rotate(1deg); }
+        }
+
+        @keyframes spark {
+          0% { transform: translateY(0) scale(1); opacity: 0; }
+          20% { transform: translateY(-20px) scale(1.2); opacity: 1; }
+          100% { transform: translateY(-40px) scale(0.8); opacity: 0; }
+        }
+      `}
+    </style>
+    <div className="candle">
+      <div className="flame-wrapper">
+        <div className="flame">
+          <div className="spark"></div>
+          <div className="spark"></div>
+          <div className="spark"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+);
 
 const Chatbot = () => {
   // State management
@@ -12,10 +98,10 @@ const Chatbot = () => {
   const [userInput, setUserInput] = useState("");
   const [isTyping, setIsTyping] = useState(false);
   const [darkMode, setDarkMode] = useState(false);
+  const [isListening, setIsListening] = useState(false);
   const [theme, setTheme] = useState("blue");
-  const [isMinimized, setIsMinimized] = useState(false);
-  const [showAttachments, setShowAttachments] = useState(false);
   const messagesEndRef = useRef(null);
+  const speechRecognition = useRef(null);
 
   // Personal information data
   const personalInfo = {
@@ -31,395 +117,364 @@ const Chatbot = () => {
     },
   };
 
-  // Enhanced responses with more categories and detailed information
+  // Theme colors
+  const themes = {
+    blue: "from-blue-600 to-purple-600",
+    green: "from-green-600 to-teal-600",
+    red: "from-red-600 to-pink-600",
+    orange: "from-orange-600 to-yellow-600",
+  };
+
+  // Enhanced responses
   const enhancedResponses = {
     skills: {
-      content: `**Technical Expertise** 🔧
-      - Full Stack Development
-        • Frontend: React, Next.js, Vue.js, Angular
-        • Backend: Node.js, Python, Java, Go
-        • Mobile: React Native, Flutter
-
-      - Database & Cloud
-        • AWS Certified Solutions Architect
-        • MongoDB, PostgreSQL, Redis
-        • Docker, Kubernetes, Terraform
-
-      - AI/ML Expertise
-        • TensorFlow, PyTorch, Scikit-learn
-        • Computer Vision & NLP
-        • MLOps & Model Deployment
-
-      - Emerging Technologies
-        • Blockchain Development
-        • Web3 & Smart Contracts
-        • IoT Integration`,
+      content: `**Technical Skills** 🔧
+        • Frontend: React, Next.js, Vue.js
+        • Backend: Node.js, Python, Java
+        • Database: MongoDB, PostgreSQL
+        • Cloud: AWS, Docker, Kubernetes`,
       icon: <Code2 className="animate-pulse" />,
     },
     experience: {
-      content: `**Professional Journey** 🚀
-      - Senior Full Stack Developer (2020-Present)
-        • Led team of 12 developers
-        • Implemented microservices architecture
-        • Reduced system latency by 40%
-
-      - AI Solutions Architect (2018-2020)
-        • Developed custom ML models
-        • Automated business processes
-        • $2M+ cost savings
-
-      **Key Achievements** 🏆
-      - Patents: 2 filed, 1 granted
-      - Published 5 technical papers
-      - Speaker at 10+ tech conferences`,
+      content: `**Work Experience** 💼
+        • Senior Developer (2020-Present)
+        • AI Solutions Architect (2018-2020)
+        • Full Stack Developer (2016-2018)`,
       icon: <Briefcase className="animate-bounce" />,
     },
     projects: {
-      content: `**Featured Projects** 💻
-      1. AI-Powered Healthcare Platform
-         • 50k+ active users
-         • 99.9% uptime
-         • Featured in TechCrunch
-
-      2. Blockchain Supply Chain
-         • $10M+ transactions processed
-         • 80% efficiency improvement
-         • Industry recognition award
-
-      3. Smart City IoT Solution
-         • 100k+ connected devices
-         • Real-time monitoring
-         • Open-source contribution`,
+      content: `**Key Projects** 🚀
+        • AI-Powered Healthcare Platform
+        • Blockchain Supply Chain Solution
+        • Smart City IoT Integration`,
       icon: <Award className="animate-spin-slow" />,
     },
     contact: {
-      content: `**Let's Connect** 📬
-      - Portfolio: yourwebsite.com
-      - Email: you@example.com
-      - LinkedIn: /in/yourprofile
-      - GitHub: /yourusername
-
-      **Availability**
-      - Timezone: ${personalInfo.availability.timezone}
-      - Hours: ${personalInfo.availability.workHours}
-      - Response: ${personalInfo.availability.response}`,
+      content: `**Contact Info** 📬
+        • Email: you@example.com
+        • LinkedIn: /in/yourprofile
+        • GitHub: /yourusername`,
       icon: <Mail className="animate-bounce" />,
     },
     hobbies: {
-      content: `**Beyond Coding** 🎯
-      ${personalInfo.hobbies.map((hobby) => `• ${hobby}`).join("\n")}
-
-      **Languages**
-      ${personalInfo.languages.map((lang) => `• ${lang}`).join("\n")}`,
+      content: `**Interests** 🎯
+        • ${personalInfo.hobbies.join('\n• ')}`,
       icon: <Heart className="animate-pulse" />,
     },
   };
 
-  // Theme colors with gradients
-  const themes = {
-    blue: "from-blue-600 via-blue-700 to-indigo-800",
-    green: "from-green-600 via-green-700 to-teal-800",
-    red: "from-red-600 via-red-700 to-pink-800",
-    orange: "from-orange-600 via-orange-700 to-yellow-800",
-  };
+  // Speech recognition setup
+  useEffect(() => {
+    if ("SpeechRecognition" in window || "webkitSpeechRecognition" in window) {
+      const SpeechRecognition =
+        window.SpeechRecognition || window.webkitSpeechRecognition;
+      speechRecognition.current = new SpeechRecognition();
+      speechRecognition.current.continuous = false;
+      speechRecognition.current.interimResults = false;
 
-  // Helper function to get enhanced response based on user input
-  const getEnhancedResponse = (input) => {
-    const lowercaseInput = input.toLowerCase();
-
-    if (
-      lowercaseInput.includes("skills") ||
-      lowercaseInput.includes("expertise")
-    ) {
-      return enhancedResponses.skills;
-    } else if (
-      lowercaseInput.includes("experience") ||
-      lowercaseInput.includes("work")
-    ) {
-      return enhancedResponses.experience;
-    } else if (
-      lowercaseInput.includes("projects") ||
-      lowercaseInput.includes("portfolio")
-    ) {
-      return enhancedResponses.projects;
-    } else if (
-      lowercaseInput.includes("contact") ||
-      lowercaseInput.includes("reach")
-    ) {
-      return enhancedResponses.contact;
-    } else if (
-      lowercaseInput.includes("hobbies") ||
-      lowercaseInput.includes("interests")
-    ) {
-      return enhancedResponses.hobbies;
-    }
-
-    // Default response
-    return {
-      content:
-        "I can tell you about my skills, experience, projects, or how to contact me. What would you like to know?",
-      icon: <Bot className="animate-pulse" />,
-    };
-  };
-
-  const handleSendMessage = async () => {
-    if (!userInput.trim()) return;
-
-    // Add user message
-    const newUserMessage = {
-      content: userInput,
-      sender: "user",
-      timestamp: new Date(),
-      id: Date.now(),
-    };
-    setMessages((prev) => [...prev, newUserMessage]);
-    setUserInput("");
-    setIsTyping(true);
-
-    // Get bot response based on input
-    const response = getEnhancedResponse(userInput);
-
-    // Simulate typing delay
-    setTimeout(() => {
-      const botResponse = {
-        content: response.content,
-        sender: "bot",
-        timestamp: new Date(),
-        id: Date.now() + 1,
-        icon: response.icon,
+      speechRecognition.current.onresult = (event) => {
+        const transcript = event.results[0][0].transcript;
+        setUserInput(transcript);
+        handleSendMessage(transcript);
       };
-      setMessages((prev) => [...prev, botResponse]);
-      setIsTyping(false);
-    }, 1500);
-  };
+    }
+  }, []);
 
-  // Message bubble component with Markdown support
-  const MessageBubble = ({ message }) => {
-    const formatContent = (content) => {
-      return content.split("\n").map((line, index) => {
-        if (line.startsWith("**") && line.endsWith("**")) {
-          return (
-            <h3 key={index} className="font-bold text-lg mb-2">
-              {line.replace(/\*\*/g, "")}
-            </h3>
-          );
-        }
-        if (line.startsWith("•")) {
-          return (
-            <li key={index} className="ml-6 mb-1">
-              {line}
-            </li>
-          );
-        }
-        if (line.startsWith("-")) {
-          return (
-            <li key={index} className="ml-4 mb-1">
-              {line.substring(1)}
-            </li>
-          );
-        }
-        return (
-          <p key={index} className="mb-1">
-            {line}
-          </p>
-        );
-      });
-    };
-
-    return (
-      <div
-        className={`group flex items-start gap-2 mb-4 ${
-          message.sender === "user" ? "justify-end" : "justify-start"
-        }`}
-      >
-        {message.sender === "bot" && (
-          <div
-            className={`w-8 h-8 rounded-full bg-gradient-to-r ${themes[theme]} p-1.5 animate-bounce-slow`}
-          >
-            {message.icon || <Bot className="text-white w-full h-full" />}
-          </div>
-        )}
-
-        <div
-          className={`relative max-w-[80%] p-4 rounded-2xl shadow-lg
-            ${
-              message.sender === "user"
-                ? `bg-gradient-to-r ${themes[theme]} text-white ml-auto`
-                : "bg-white dark:bg-gray-800 dark:text-white"
-            }
-            transform transition-all duration-300 hover:scale-[1.02]
-            animate-fade-in-up`}
-        >
-          <div className="text-sm sm:text-base">
-            {formatContent(message.content)}
-          </div>
-          <div className="flex items-center gap-1 text-xs opacity-70 mt-2">
-            <Clock className="w-3 h-3" />
-            {new Date(message.timestamp).toLocaleTimeString()}
-          </div>
-        </div>
-
-        {message.sender === "user" && (
-          <div
-            className={`w-8 h-8 rounded-full bg-gradient-to-r ${themes[theme]} p-1.5 animate-bounce-slow`}
-          >
-            <div className="w-full h-full rounded-full bg-white/30" />
-          </div>
-        )}
-      </div>
-    );
-  };
-
+  // Auto-scroll to bottom
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
-  return (
+  // Get enhanced response based on user input
+  const getEnhancedResponse = (input) => {
+    const lowercaseInput = input.toLowerCase();
+
+    if (lowercaseInput.includes("skills")) return enhancedResponses.skills;
+    if (lowercaseInput.includes("experience")) return enhancedResponses.experience;
+    if (lowercaseInput.includes("projects")) return enhancedResponses.projects;
+    if (lowercaseInput.includes("contact")) return enhancedResponses.contact;
+    if (lowercaseInput.includes("hobbies")) return enhancedResponses.hobbies;
+
+    return {
+      content: "Hi! I can tell you about my skills, experience, projects, or how to contact me. What would you like to know?",
+      icon: <Bot className="animate-pulse" />,
+      options: ["Tell me about your skills", "What's your experience?", "Show me your projects", "How can I contact you?"],
+    };
+  };
+
+  // Handle voice input
+  const toggleVoiceInput = () => {
+    if (isListening) {
+      speechRecognition.current?.stop();
+    } else {
+      speechRecognition.current?.start();
+    }
+    setIsListening(!isListening);
+  };
+
+  // Handle sending messages
+  const handleSendMessage = async (voiceInput = null) => {
+    const input = voiceInput || userInput;
+    if (!input.trim()) return;
+
+    const newUserMessage = {
+      content: input,
+      sender: "user",
+      timestamp: new Date(),
+      animate: true,
+    };
+
+    setMessages((prev) => [...prev, newUserMessage]);
+    setUserInput("");
+    setIsTyping(true);
+
+    setTimeout(() => {
+      const response = getEnhancedResponse(input);
+      setMessages((prev) => [
+        ...prev,
+        {
+          ...response,
+          sender: "bot",
+          timestamp: new Date(),
+          animate: true,
+        },
+      ]);
+      setIsTyping(false);
+    }, Math.random() * 1000 + 500);
+  };
+
+  // Message bubble component
+  const MessageBubble = ({ message }) => (
     <div
-      className={`fixed z-50 ${darkMode ? "dark" : ""}
-      ${
-        isOpen
-          ? "inset-0 sm:inset-auto sm:bottom-4 sm:right-4"
-          : "bottom-4 right-4"
-      }`}
+      className={`relative p-3 sm:p-4 rounded-3xl max-w-[95%] sm:max-w-[85%] shadow-lg transform transition-all duration-300
+        ${message.animate ? "animate-slide-in" : ""}
+        ${
+          message.sender === "user"
+            ? `ml-auto bg-gradient-to-br ${themes[theme]} text-white`
+            : "bg-gradient-to-tl from-gray-100 to-white text-gray-800 dark:from-gray-700 dark:to-gray-800 dark:text-white"
+        }`}
     >
+      <div className="flex items-start gap-2 sm:gap-3">
+        {message.icon && <div className="w-4 h-4 sm:w-6 sm:h-6">{message.icon}</div>}
+        <div className="whitespace-pre-line text-sm sm:text-base">
+          {message.content.split("\n").map((line, i) => (
+            <p key={i} className="mb-1 sm:mb-2">{line}</p>
+          ))}
+        </div>
+      </div>
+      {message.options && (
+        <div className="mt-2 sm:mt-3 flex flex-wrap gap-1 sm:gap-2">
+          {message.options.map((option, i) => (
+            <button
+              key={i}
+              onClick={() => {
+                setUserInput(option);
+                handleSendMessage();
+              }}
+              className="px-2 py-1 text-xs sm:text-sm bg-black/10 rounded-full hover:bg-black/20 transition-all"
+            >
+              {option}
+            </button>
+          ))}
+        </div>
+      )}
+      <div className="text-[10px] sm:text-xs mt-1 sm:mt-2 opacity-75 flex items-center gap-1">
+        <Clock className="w-3 h-3 sm:w-4 sm:h-4" />
+        {new Date(message.timestamp).toLocaleTimeString()}
+      </div>
+    </div>
+  );
+
+  return (
+    <div className={`fixed bottom-4 right-4 z-50 ${darkMode ? "dark" : ""}`}>
       {isOpen && (
-        <div
-          className={`flex flex-col bg-gray-50 dark:bg-gray-900
-          ${isOpen ? "fixed inset-0 sm:absolute sm:bottom-16 sm:right-0" : ""}
-          ${isMinimized ? "h-20" : "h-full sm:h-[600px]"}
-          sm:w-[400px] rounded-lg shadow-2xl animate-fade-in-up`}
-        >
-          {/* Header */}
-          <div
-            className={`flex items-center justify-between p-4 bg-gradient-to-r ${themes[theme]} text-white rounded-t-lg`}
-          >
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-full bg-white/20 p-2 animate-bounce-slow">
-                <Bot className="w-full h-full" />
+        <div className="chat-container w-[400px] h-[600px] sm:w-[350px] sm:h-[500px] bg-white dark:bg-gray-900 rounded-2xl shadow-2xl flex flex-col animate-fade-in-up overflow-hidden relative">
+          <AnimatedCandle darkMode={darkMode} />
+
+          <div className="absolute inset-0 bg-white/90 dark:bg-gray-900/90" />
+
+          <div className="relative z-10 flex flex-col h-full">
+            {/* Header */}
+            <div className={`bg-gradient-to-r ${themes[theme]} p-4 rounded-t-2xl flex items-center justify-between`}>
+              <div className="flex items-center gap-3">
+                <Bot className="text-white w-6 h-6" />
+                <div>
+                  <h3 className="font-bold text-white">{personalInfo.name}</h3>
+                  <p className="text-xs text-white/80 flex items-center gap-1">
+                    <span className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></span>
+                    {personalInfo.title}
+                  </p>
+                </div>
               </div>
-              <div>
-                <h3 className="font-bold">{personalInfo.name}</h3>
-                <p className="text-xs flex items-center gap-2">
-                  <span className="w-2 h-2 rounded-full bg-green-400 animate-pulse"></span>
-                  {personalInfo.title}
-                </p>
+              <div className="flex gap-2">
+                <button
+                  onClick={() => setTheme(Object.keys(themes)[(Object.keys(themes).indexOf(theme) + 1) % Object.keys(themes).length])}
+                  className="p-2 hover:bg-white/10 rounded-full transition-all"
+                >
+                  <Coffee className="text-white w-4 h-4" />
+                </button>
+                <button
+                  onClick={() => setDarkMode(!darkMode)}
+                  className="p-2 hover:bg-white/10 rounded-full transition-all"
+                >
+                  {darkMode ? (
+                    <Sun className="text-white w-4 h-4" />
+                  ) : (
+                    <Moon className="text-white w-4 h-4" />
+                  )}
+                </button>
+                <button
+                  onClick={() => setIsOpen(false)}
+                  className="p-2 hover:bg-white/10 rounded-full transition-all"
+                >
+                  <X className="text-white w-4 h-4" />
+                </button>
               </div>
             </div>
 
-            <div className="flex items-center gap-2">
-              <button
-                onClick={() => setDarkMode(!darkMode)}
-                className="p-2 hover:bg-white/20 rounded-full transition-all"
-              >
-                {darkMode ? (
-                  <Sun className="w-5 h-5" />
-                ) : (
-                  <Moon className="w-5 h-5" />
-                )}
-              </button>
-              <button
-                onClick={() => setIsMinimized(!isMinimized)}
-                className="p-2 hover:bg-white/20 rounded-full transition-all"
-              >
-                <Settings className="w-5 h-5" />
-              </button>
-              <button
-                onClick={() => setIsOpen(false)}
-                className="p-2 hover:bg-white/20 rounded-full transition-all"
-              >
-                <X className="w-5 h-5" />
-              </button>
-            </div>
-          </div>
-
-          {/* Messages area */}
-          {!isMinimized && (
-            <div className="flex-1 overflow-y-auto p-4">
-              {messages.map((message) => (
-                <MessageBubble key={message.id} message={message} />
+            {/* Messages Area */}
+            <div className="flex-1 p-4 overflow-y-auto">
+              {messages.map((message, index) => (
+                <div key={index} className="mb-4">
+                  <MessageBubble message={message} />
+                </div>
               ))}
               {isTyping && (
-                <div className="flex gap-2 p-3">
-                  <div className="w-2 h-2 rounded-full bg-gray-400 animate-bounce"></div>
-                  <div className="w-2 h-2 rounded-full bg-gray-400 animate-bounce delay-100"></div>
-                  <div className="w-2 h-2 rounded-full bg-gray-400 animate-bounce delay-200"></div>
+                <div className="flex gap-2 text-gray-400">
+                  <div className="animate-bounce">●</div>
+                  <div className="animate-bounce delay-100">●</div>
+                  <div className="animate-bounce delay-200">●</div>
                 </div>
               )}
               <div ref={messagesEndRef} />
             </div>
-          )}
 
-          {/* Input area */}
-          {!isMinimized && (
+            {/* Input Area */}
             <div className="p-4 border-t dark:border-gray-700">
               <div className="flex items-center gap-2">
                 <button
-                  onClick={() => setShowAttachments(!showAttachments)}
-                  className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800
-                    transition-all animate-pulse"
+                  onClick={toggleVoiceInput}
+                  className={`p-2 rounded-full transition-all ${
+                    isListening ? "text-red-500 animate-pulse" : "text-gray-400"
+                  }`}
                 >
-                  <Link className="w-5 h-5 text-gray-500" />
+                  <Mic className="w-4 h-4" />
                 </button>
-
-                <div className="flex-1 relative">
-                  <input
-                    type="text"
-                    value={userInput}
-                    onChange={(e) => setUserInput(e.target.value)}
-                    onKeyPress={(e) => e.key === "Enter" && handleSendMessage()}
-                    placeholder="Ask about skills, experience, projects..."
-                    className="w-full px-4 py-2 rounded-full border dark:border-gray-700
-                      dark:bg-gray-800 dark:text-white focus:outline-none focus:ring-2
-                      focus:ring-blue-500"
-                  />
-
-                  {showAttachments && (
-                    <div
-                      className="absolute bottom-full mb-2 left-0 bg-white dark:bg-gray-800
-                      rounded-lg shadow-lg border dark:border-gray-700 p-2"
-                    >
-                      <div className="flex gap-2">
-                        <button className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg">
-                          <Image className="w-5 h-5 text-gray-500" />
-                        </button>
-                        <button className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg">
-                          <FileText className="w-5 h-5 text-gray-500" />
-                        </button>
-                        <button className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg">
-                          <Video className="w-5 h-5 text-gray-500" />
-                        </button>
-                      </div>
-                    </div>
-                  )}
-                </div>
-
+                <input
+                  type="text"
+                  value={userInput}
+                  onChange={(e) => setUserInput(e.target.value)}
+                  onKeyPress={(e) => e.key === "Enter" && handleSendMessage()}
+                  placeholder="Type your message..."
+                  className="flex-1 px-4 py-2 rounded-xl border dark:border-gray-700 dark:bg-gray-800 focus:outline-none focus:border-blue-500"
+                />
                 <button
-                  onClick={handleSendMessage}
-                  disabled={!userInput.trim()}
-                  className={`p-2 rounded-full bg-gradient-to-r ${themes[theme]}
-                    disabled:opacity-50 disabled:cursor-not-allowed
-                    hover:opacity-90 transition-all animate-pulse`}
+                  onClick={() => handleSendMessage()}
+                className={`p-2 text-white bg-gradient-to-r ${themes[theme]} rounded-xl hover:opacity-90 transition-all`}
                 >
-                  <Send className="w-5 h-5 text-white" />
+                  <Send className="w-4 h-4" />
                 </button>
               </div>
             </div>
-          )}
+          </div>
         </div>
       )}
 
-      {/* Floating action button */}
-      {!isOpen && (
-        <button
-          onClick={() => setIsOpen(true)}
-          className={`fixed bottom-4 right-4 w-14 h-14 rounded-full
-            bg-gradient-to-r ${themes[theme]} text-white shadow-lg
-            hover:shadow-xl transition-all ${Animation.pulse}`}
-        >
-          <MessageCircle className="w-6 h-6 mx-auto" />
-        </button>
-      )}
+      {/* Floating Action Button */}
+      <button
+        onClick={() => setIsOpen(!isOpen)}
+        className={`w-12 h-12 bg-gradient-to-r ${themes[theme]} rounded-full
+          shadow-lg flex items-center justify-center text-white
+          hover:shadow-xl transition-all animate-pulse`}
+      >
+        {isOpen ? (
+          <X className="w-6 h-6" />
+        ) : (
+          <MessageCircle className="w-6 h-6" />
+        )}
+      </button>
+
+      {/* Global Styles */}
+      <style jsx global>
+        {`
+          @keyframes fade-in-up {
+            0% {
+              opacity: 0;
+              transform: translateY(20px);
+            }
+            100% {
+              opacity: 1;
+              transform: translateY(0);
+            }
+          }
+
+          @keyframes slide-in {
+            0% {
+              opacity: 0;
+              transform: translateX(20px);
+            }
+            100% {
+              opacity: 1;
+              transform: translateX(0);
+            }
+          }
+
+          .animate-fade-in-up {
+            animation: fade-in-up 0.3s ease-out;
+          }
+
+          .animate-slide-in {
+            animation: slide-in 0.3s ease-out;
+          }
+
+          .animate-spin-slow {
+            animation: spin 3s linear infinite;
+          }
+
+          @keyframes spin {
+            from {
+              transform: rotate(0deg);
+            }
+            to {
+              transform: rotate(360deg);
+            }
+          }
+
+          /* Dark mode transitions */
+          .dark .chat-container {
+            transition: background-color 0.3s ease;
+          }
+
+          /* Responsive styles */
+          @media (max-width: 640px) {
+            .chat-container {
+              width: 90vw !important;
+              height: 80vh !important;
+              margin: 0 auto;
+              right: 50%;
+              transform: translateX(50%);
+            }
+          }
+
+          /* Scrollbar styling */
+          .chat-container ::-webkit-scrollbar {
+            width: 6px;
+          }
+
+          .chat-container ::-webkit-scrollbar-track {
+            background: transparent;
+          }
+
+          .chat-container ::-webkit-scrollbar-thumb {
+            background: rgba(0, 0, 0, 0.1);
+            border-radius: 3px;
+          }
+
+          .dark .chat-container ::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.1);
+          }
+        `}
+      </style>
     </div>
   );
 };
