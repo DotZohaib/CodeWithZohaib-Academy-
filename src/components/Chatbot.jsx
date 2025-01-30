@@ -1,7 +1,6 @@
-
 'use client';
 import React, { useState, useEffect, useRef } from 'react';
-import { MessageCircle, Send, X, Bot, ArrowLeft } from 'lucide-react';
+import { MessageCircle, Send, X, Bot, ArrowLeft, Mic, Upload } from 'lucide-react';
 
 const Chatbot = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -11,13 +10,34 @@ const Chatbot = () => {
   const [isTyping, setIsTyping] = useState(false);
   const [showNameInput, setShowNameInput] = useState(true);
   const [unreadCount, setUnreadCount] = useState(0);
+  const [isListening, setIsListening] = useState(false);
+  const [file, setFile] = useState(null);
   const messagesEndRef = useRef(null);
+  const recognitionRef = useRef(null);
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
       const storedUserName = localStorage.getItem('userName') || '';
       setUserName(storedUserName);
       setShowNameInput(!storedUserName);
+
+      // Initialize speech recognition
+      const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+      if (SpeechRecognition) {
+        recognitionRef.current = new SpeechRecognition();
+        recognitionRef.current.continuous = false;
+        recognitionRef.current.interimResults = false;
+        recognitionRef.current.lang = 'en-US';
+        recognitionRef.current.onresult = (event) => {
+          const transcript = event.results[0][0].transcript;
+          setUserInput(transcript);
+          setIsListening(false);
+        };
+        recognitionRef.current.onerror = (event) => {
+          console.error('Speech recognition error:', event.error);
+          setIsListening(false);
+        };
+      }
     }
   }, []);
 
@@ -37,33 +57,15 @@ const Chatbot = () => {
           sender: "bot",
           time: new Date()
         }]);
+        speak(`Hi ${userName}! How can I assist you today?`);
       }, 1000);
     }
   }, [userName]);
 
-  // Simulate new message notification when closed
-  useEffect(() => {
-    if (!isOpen) {
-      const timer = setInterval(() => {
-        if (Math.random() < 0.3) { // 30% chance every 30 seconds
-          setUnreadCount(prev => prev + 1);
-        }
-      }, 30000);
-      return () => clearInterval(timer);
-    }
-  }, [isOpen]);
-
-  // Simulate new message notification when closed
-  useEffect(() => {
-    if (!isOpen) {
-      const timer = setInterval(() => {
-        if (Math.random() < 0.3) { // 30% chance every 30 seconds
-          setUnreadCount(prev => prev + 1);
-        }
-      }, 30000);
-      return () => clearInterval(timer);
-    }
-  }, [isOpen]);
+  const speak = (text) => {
+    const utterance = new SpeechSynthesisUtterance(text);
+    window.speechSynthesis.speak(utterance);
+  };
 
   const handleToggle = () => {
     setIsOpen(!isOpen);
@@ -82,32 +84,61 @@ const Chatbot = () => {
   };
 
   const handleSendMessage = async () => {
-    if (!userInput.trim()) return;
+    if (!userInput.trim() && !file) return;
 
-    const newMessage = {
-      text: userInput,
-      sender: "user",
-      time: new Date()
-    };
+    if (file) {
+      const newMessage = {
+        text: `File: ${file.name}`,
+        sender: "user",
+        time: new Date(),
+        file: URL.createObjectURL(file)
+      };
+      setMessages(prev => [...prev, newMessage]);
+      setFile(null);
+    }
 
-    setMessages(prev => [...prev, newMessage]);
-    setUserInput('');
-    setIsTyping(true);
-
-    // Simulate bot thinking
-    setTimeout(async () => {
-      const response = await getBotResponse(userInput);
-      setMessages(prev => [...prev, {
-        text: response,
-        sender: "bot",
+    if (userInput.trim()) {
+      const newMessage = {
+        text: userInput,
+        sender: "user",
         time: new Date()
-      }]);
-      setIsTyping(false);
-    }, Math.random() * 1000 + 1000);
+      };
+      setMessages(prev => [...prev, newMessage]);
+      setUserInput('');
+      setIsTyping(true);
+
+      setTimeout(async () => {
+        const response = await getBotResponse(userInput);
+        setMessages(prev => [...prev, {
+          text: response,
+          sender: "bot",
+          time: new Date()
+        }]);
+        speak(response);
+        setIsTyping(false);
+      }, Math.random() * 1000 + 1000);
+    }
+  };
+
+  const handleFileUpload = (e) => {
+    const uploadedFile = e.target.files[0];
+    if (uploadedFile) {
+      setFile(uploadedFile);
+    }
+  };
+
+  const handleVoiceInput = () => {
+    if (isListening) {
+      recognitionRef.current.stop();
+      setIsListening(false);
+    } else {
+      recognitionRef.current.start();
+      setIsListening(true);
+    }
   };
 
   const getBotResponse = async (input) => {
-    const responses = [
+       const responses = [
       { keywords: ['hi', 'hello', 'hey'], response: `Hello! How can I help you today? 👋` },
       { keywords: ['bye', 'goodbye'], response: "Goodbye! Have a great day! 👋" },
       { keywords: ['thanks', 'thank you'], response: "You're welcome! Is there anything else you need? 😊" },
@@ -322,7 +353,7 @@ const Chatbot = () => {
       { keywords: ['how', 'to', 'stay', 'updated'], response: "I stay updated by following tech news, blogs, and podcasts." },
       { keywords: ['project', 'management', 'tools'], response: "I use tools like Trello and Asana for project management." },
       { keywords: ['impact', 'of', 'user', 'experience'], response: "User experience greatly impacts user satisfaction and retention." },
-    
+
     ];
 
     const lowerInput = input.toLowerCase();
@@ -331,6 +362,7 @@ const Chatbot = () => {
         return response;
       }
     }
+    // Your existing response logic here
     return "I'm here to help! Feel free to ask any questions. 🤖";
   };
 
@@ -349,7 +381,7 @@ const Chatbot = () => {
                   <p className="text-sm opacity-90">Online</p>
                 </div>
               </div>
-              <button 
+              <button
                 onClick={handleToggle}
                 className="p-1 hover:bg-white/20 rounded-full transition-colors"
               >
@@ -396,7 +428,13 @@ const Chatbot = () => {
                           : 'bg-white text-gray-800 shadow-sm'
                       }`}
                     >
-                      <p>{message.text}</p>
+                      {message.file ? (
+                        <a href={message.file} target="_blank" rel="noopener noreferrer" className="text-blue-300 underline">
+                          {message.text}
+                        </a>
+                      ) : (
+                        <p>{message.text}</p>
+                      )}
                       <p className={`text-xs mt-1 ${
                         message.sender === 'user' ? 'text-blue-100' : 'text-gray-500'
                       }`}>
@@ -434,6 +472,18 @@ const Chatbot = () => {
                   className="flex-1 px-4 py-2 border rounded-full focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
                 <button
+                  onClick={handleVoiceInput}
+                  className={`p-2 rounded-full transition-colors ${
+                    isListening ? 'bg-red-500' : 'bg-gray-200 hover:bg-gray-300'
+                  }`}
+                >
+                  <Mic size={20} />
+                </button>
+                <label className="p-2 bg-gray-200 rounded-full hover:bg-gray-300 transition-colors cursor-pointer">
+                  <Upload size={20} />
+                  <input type="file" className="hidden" onChange={handleFileUpload} />
+                </label>
+                <button
                   onClick={handleSendMessage}
                   className="p-2 bg-blue-600 text-white rounded-full hover:bg-blue-700 transition-colors"
                 >
@@ -457,14 +507,14 @@ const Chatbot = () => {
             <MessageCircle size={24} />
           )}
         </div>
-        
+
         {/* Unread Count Badge */}
         {!isOpen && unreadCount > 0 && (
           <div className="absolute -top-2 -right-2 w-6 h-6 bg-red-500 text-white rounded-full flex items-center justify-center text-sm font-bold">
             {unreadCount}
           </div>
         )}
-        
+
         {/* Tooltip */}
         {!isOpen && (
           <div className="absolute bottom-full right-0 mb-2 pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity">
