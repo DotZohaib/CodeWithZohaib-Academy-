@@ -370,7 +370,7 @@ const Chatbot = () => {
     <div className="fixed bottom-4 right-4 z-50 flex flex-col items-end">
       {/* Chat Window */}
       {isOpen && (
-        <div className="md:m-4 md:p-4 p-1 m-1 w-[360px] h-[520px] bg-white rounded-2xl shadow-2xl flex flex-col overflow-hidden animate-slideUp">
+        <div className=" md:p-4 p-1  w-[360px] h-[520px] bg-white rounded-2xl shadow-2xl flex flex-col overflow-hidden animate-slideUp">
           {/* Header */}
           <div className="bg-gradient-to-r from-blue-600 to-purple-600 p-4 text-white">
             <div className="flex items-center justify-between">
@@ -461,7 +461,7 @@ const Chatbot = () => {
 
           {/* Input Area */}
           {!showNameInput && (
-            <div className="p-4 bg-white border-t">
+            <div className="p-2 -ml-2 bg-white border-t">
               <div className="flex gap-2">
                 <input
                   type="text"
