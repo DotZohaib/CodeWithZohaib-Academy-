@@ -370,7 +370,7 @@ const Chatbot = () => {
     <div className="fixed bottom-4 right-4 z-50 flex flex-col items-end">
       {/* Chat Window */}
       {isOpen && (
-        <div className="m-4 p-4 w-[360px] h-[520px] bg-white rounded-2xl shadow-2xl flex flex-col overflow-hidden animate-slideUp">
+        <div className="md:m-4 md:p-4 p-1 m-1 w-[360px] h-[520px] bg-white rounded-2xl shadow-2xl flex flex-col overflow-hidden animate-slideUp">
           {/* Header */}
           <div className="bg-gradient-to-r from-blue-600 to-purple-600 p-4 text-white">
             <div className="flex items-center justify-between">
@@ -391,9 +391,9 @@ const Chatbot = () => {
           </div>
 
           {/* Chat Content */}
-          <div className="flex-1 overflow-y-auto p-4 bg-gray-50">
+          <div className="flex-1 overflow-y-auto p-1 bg-gray-50">
             {showNameInput ? (
-              <div className="flex flex-col items-center justify-center h-full gap-4 p-4">
+              <div className="flex flex-col items-center justify-center h-full gap-2 p-1">
                 <Bot size={48} className="text-blue-600" />
                 <h2 className="text-xl font-semibold text-gray-800">Welcome! 👋</h2>
                 <p className="text-gray-600 text-center">Please enter your name to start chatting</p>
