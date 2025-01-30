@@ -18,83 +18,169 @@ import {
 } from "lucide-react";
 
 const AnimatedCandle = ({ darkMode }) => (
-  <div className="candle-container absolute inset-0 overflow-hidden pointer-events-none z-0">
+  <div className="candle-wrapper fixed inset-0 overflow-hidden pointer-events-none z-0">
     <style>
       {`
+        .candle-wrapper {
+          perspective: 1000px;
+        }
+
         .candle {
           position: absolute;
           left: 50%;
           bottom: 15%;
-          width: 24px;
-          height: 80px;
-          background: ${darkMode ? '#fff' : '#000'};
-          border-radius: 3px;
+          width: 28px;
+          height: 100px;
+          background: linear-gradient(to right,
+            ${darkMode ? 'rgba(255,255,255,0.9)' : 'rgba(255,255,255,0.95)'},
+            ${darkMode ? 'rgba(255,255,255,1)' : 'rgba(255,255,255,1)'},
+            ${darkMode ? 'rgba(255,255,255,0.9)' : 'rgba(255,255,255,0.95)'}
+          );
+          border-radius: 4px;
           transform: translateX(-50%);
-          box-shadow: 0 0 15px rgba(${darkMode ? '255,255,255,0.2' : '0,0,0,0.2'});
-          transition: all 0.3s ease;
+          box-shadow:
+            0 0 20px rgba(255,255,255,0.4),
+            inset 0 0 8px rgba(0,0,0,0.1);
         }
 
-        .flame-wrapper {
+        .candle::before {
+          content: '';
+          position: absolute;
+          top: 0;
+          left: 50%;
+          transform: translateX(-50%);
+          width: 32px;
+          height: 10px;
+          background: rgba(255,255,255,0.8);
+          border-radius: 50%;
+          filter: blur(2px);
+        }
+
+        .wick {
           position: absolute;
           left: 50%;
           bottom: 100%;
+          width: 4px;
+          height: 12px;
+          background: #2c2c2c;
+          border-radius: 2px;
           transform: translateX(-50%);
+        }
+
+        .flame-container {
+          position: absolute;
+          left: 50%;
+          bottom: calc(100% + 10px);
+          transform: translateX(-50%);
+          z-index: 2;
         }
 
         .flame {
           position: relative;
-          width: 12px;
-          height: 24px;
-          background: #ff9800;
+          width: 16px;
+          height: 32px;
+          background: linear-gradient(to bottom, #ff6b2c 0%, #ff922c 60%, #ffdc2c 100%);
           border-radius: 50% 50% 20% 20%;
           transform-origin: center bottom;
-          animation: flicker 1s ease-in-out infinite alternate;
-          box-shadow: 0 0 15px #ff9800, 0 0 30px #ff6600;
+          animation: flameMove 3s ease-in-out infinite;
+          filter: blur(1px);
+        }
+
+        .flame::before {
+          content: '';
+          position: absolute;
+          width: 100%;
+          height: 100%;
+          background: radial-gradient(ellipse at center, rgba(255,255,255,0.8) 0%, transparent 80%);
+          border-radius: inherit;
+          mix-blend-mode: screen;
+        }
+
+        .glow {
+          position: absolute;
+          top: 50%;
+          left: 50%;
+          transform: translate(-50%, -50%);
+          width: 32px;
+          height: 48px;
+          background: radial-gradient(ellipse at center, rgba(255,160,40,0.4) 0%, transparent 70%);
+          filter: blur(4px);
+          animation: glowPulse 2s ease-in-out infinite alternate;
         }
 
         .spark {
           position: absolute;
-          width: 2px;
-          height: 2px;
+          width: 3px;
+          height: 3px;
           background: #ffeb3b;
           border-radius: 50%;
-          animation: spark 2s ease-in-out infinite;
+          filter: blur(1px);
+          animation: sparkFloat 2s ease-out infinite;
           opacity: 0;
         }
 
-        .spark:nth-child(1) { left: -8px; animation-delay: 0.2s; }
-        .spark:nth-child(2) { left: 8px; animation-delay: 0.7s; }
-        .spark:nth-child(3) { left: 0; animation-delay: 1.2s; }
+        .spark:nth-child(1) { left: -10px; animation-delay: 0.4s; }
+        .spark:nth-child(2) { left: 10px; animation-delay: 1.2s; }
+        .spark:nth-child(3) { left: 0; animation-delay: 0.8s; }
+        .spark:nth-child(4) { left: -5px; animation-delay: 1.6s; }
 
-        @keyframes flicker {
-          0%, 100% { transform: scale(1) rotate(-2deg); }
-          25% { transform: scale(1.1) rotate(2deg); }
-          50% { transform: scale(0.9) rotate(-1deg); }
-          75% { transform: scale(1.05) rotate(1deg); }
+        @keyframes flameMove {
+          0%, 100% { transform: scale(1) rotate(-2deg) translateX(0); }
+          25% { transform: scale(1.1) rotate(3deg) translateX(-1px); }
+          50% { transform: scale(0.95) rotate(-1deg) translateX(1px); }
+          75% { transform: scale(1.05) rotate(2deg) translateX(0); }
         }
 
-        @keyframes spark {
+        @keyframes sparkFloat {
           0% { transform: translateY(0) scale(1); opacity: 0; }
-          20% { transform: translateY(-15px) scale(1.2); opacity: 1; }
-          100% { transform: translateY(-30px) scale(0.8); opacity: 0; }
+          20% { transform: translateY(-20px) scale(1.2); opacity: 1; }
+          100% { transform: translateY(-40px) scale(0.8); opacity: 0; }
         }
 
-        @media (max-width: 640px) {
+        @keyframes glowPulse {
+          0% { opacity: 0.4; transform: translate(-50%, -50%) scale(1); }
+          100% { opacity: 0.6; transform: translate(-50%, -50%) scale(1.1); }
+        }
+
+        @media (max-width: 768px) {
+          .candle {
+            bottom: 12%;
+            width: 24px;
+            height: 80px;
+          }
+          .flame {
+            width: 14px;
+            height: 28px;
+          }
+          .glow {
+            width: 28px;
+            height: 42px;
+          }
+        }
+
+        @media (max-width: 480px) {
           .candle {
             bottom: 10%;
             width: 20px;
             height: 60px;
           }
           .flame {
-            width: 10px;
-            height: 20px;
+            width: 12px;
+            height: 24px;
+          }
+          .glow {
+            width: 24px;
+            height: 36px;
           }
         }
       `}
     </style>
     <div className="candle">
-      <div className="flame-wrapper">
+      <div className="wick"></div>
+      <div className="flame-container">
+        <div className="glow"></div>
         <div className="flame">
+          <div className="spark"></div>
           <div className="spark"></div>
           <div className="spark"></div>
           <div className="spark"></div>
@@ -185,6 +271,11 @@ const Chatbot = () => {
         setUserInput(transcript);
         handleSendMessage(transcript);
       };
+
+      speechRecognition.current.onerror = (event) => {
+        console.error("Speech recognition error:", event.error);
+        setIsListening(false);
+      };
     }
   }, []);
 
@@ -271,7 +362,7 @@ const Chatbot = () => {
               key={i}
               onClick={() => {
                 setUserInput(option);
-                handleSendMessage();
+                handleSendMessage(option);
               }}
               className="px-2 py-1 text-xs sm:text-sm bg-black/10 rounded-full hover:bg-black/20 transition-all"
             >
@@ -288,17 +379,16 @@ const Chatbot = () => {
   );
 
   return (
-    <div className={`fixed bottom-4 right-4 z-50 ${darkMode ? "dark" : ""}`}>
+    <div className={`fixed bottom-0 sm:bottom-4 right-0 sm:right-4 z-50 ${darkMode ? "dark" : ""}`}>
       {isOpen && (
-        <div className="chat-container w-[90vw] h-[80vh] max-w-[400px] max-h-[600px] bg-white dark:bg-gray-900 rounded-2xl shadow-2xl flex flex-col animate-fade-in-up overflow-hidden relative">
+        <div className="chat-container w-full sm:w-[90vw] h-[90vh] sm:h-[80vh] max-w-[450px] max-h-[700px] bg-white dark:bg-gray-900 rounded-none sm:rounded-2xl shadow-2xl flex flex-col animate-fade-in-up overflow-hidden relative">
           <AnimatedCandle darkMode={darkMode} />
-          <div className="absolute inset-0 bg-white/90 dark:bg-gray-900/90 backdrop-blur-sm" />
+          <div className="absolute inset-0 bg-white/95 dark:bg-gray-900/95 backdrop-blur-sm" />
 
           <div className="relative z-10 flex flex-col h-full">
             <div className={`bg-gradient-to-r ${themes[theme]} p-4 rounded-t-2xl flex items-center justify-between`}>
               <div className="flex items-center gap-3">
-                <Bot className="text-white w-6 h-6" />
-                <div>
+              <div>
                   <h3 className="font-bold text-white">{personalInfo.name}</h3>
                   <p className="text-xs text-white/80 flex items-center gap-1">
                     <span className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></span>
@@ -348,15 +438,15 @@ const Chatbot = () => {
               <div ref={messagesEndRef} />
             </div>
 
-            <div className="p-3 sm:p-4 border-t dark:border-gray-700">
+            <div className="p-3 sm:p-4 border-t dark:border-gray-700 bg-white/80 dark:bg-gray-900/80 backdrop-blur-sm">
               <div className="flex items-center gap-2">
                 <button
                   onClick={toggleVoiceInput}
                   className={`p-2 rounded-full transition-all ${
-                    isListening ? "text-red-500 animate-pulse" : "text-gray-400"
+                    isListening ? "text-red-500 animate-pulse" : "text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
                   }`}
                 >
-                  <Mic className="w-4 h-4" />
+                  <Mic className="w-5 h-5" />
                 </button>
                 <input
                   type="text"
@@ -364,13 +454,13 @@ const Chatbot = () => {
                   onChange={(e) => setUserInput(e.target.value)}
                   onKeyPress={(e) => e.key === "Enter" && handleSendMessage()}
                   placeholder="Type your message..."
-                  className="flex-1 px-4 py-2 rounded-xl border dark:border-gray-700 dark:bg-gray-800 focus:outline-none focus:border-blue-500 text-sm sm:text-base"
+                  className="flex-1 px-4 py-2 rounded-xl border dark:border-gray-700 dark:bg-gray-800 dark:text-white focus:outline-none focus:border-blue-500 text-sm sm:text-base"
                 />
                 <button
                   onClick={() => handleSendMessage()}
                   className={`p-2 text-white bg-gradient-to-r ${themes[theme]} rounded-xl hover:opacity-90 transition-all`}
                 >
-                  <Send className="w-4 h-4" />
+                  <Send className="w-5 h-5" />
                 </button>
               </div>
             </div>
@@ -380,66 +470,99 @@ const Chatbot = () => {
 
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className={`w-12 h-12 bg-gradient-to-r ${themes[theme]} rounded-full
+        className={`fixed bottom-4 right-4 w-14 h-14 sm:w-12 sm:h-12 bg-gradient-to-r ${themes[theme]} rounded-full
           shadow-lg flex items-center justify-center text-white
           hover:shadow-xl transition-all animate-pulse`}
       >
         {isOpen ? <X className="w-6 h-6" /> : <MessageCircle className="w-6 h-6" />}
       </button>
 
-      <style jsx global>
-        {`
-          @keyframes fade-in-up {
-            0% { opacity: 0; transform: translateY(20px); }
-            100% { opacity: 1; transform: translateY(0); }
+      <style jsx global>{`
+        @keyframes fade-in-up {
+          0% { opacity: 0; transform: translateY(20px); }
+          100% { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes slide-in {
+          0% { opacity: 0; transform: translateX(20px); }
+          100% { opacity: 1; transform: translateX(0); }
+        }
+
+        .animate-fade-in-up {
+          animation: fade-in-up 0.3s ease-out;
+        }
+
+        .animate-slide-in {
+          animation: slide-in 0.3s ease-out;
+        }
+
+        .animate-spin-slow {
+          animation: spin 3s linear infinite;
+        }
+
+        @keyframes spin {
+          from { transform: rotate(0deg); }
+          to { transform: rotate(360deg); }
+        }
+
+        .dark .chat-container {
+          transition: background-color 0.3s ease;
+        }
+
+        @media (max-width: 640px) {
+          .chat-container {
+            width: 100vw !important;
+            height: 100vh !important;
+            max-height: 100vh !important;
+            position: fixed;
+            left: 0;
+            bottom: 0;
+            margin: 0;
+            border-radius: 0 !important;
           }
-          @keyframes slide-in {
-            0% { opacity: 0; transform: translateX(20px); }
-            100% { opacity: 1; transform: translateX(0); }
+
+          .message-bubble {
+            max-width: 85% !important;
+            margin: 0.5rem 0;
           }
-          .animate-fade-in-up {
-            animation: fade-in-up 0.3s ease-out;
+
+          .input-container {
+            padding: env(safe-area-inset-bottom);
           }
-          .animate-slide-in {
-            animation: slide-in 0.3s ease-out;
-          }
-          .animate-spin-slow {
-            animation: spin 3s linear infinite;
-          }
-          @keyframes spin {
-            from { transform: rotate(0deg); }
-            to { transform: rotate(360deg); }
-          }
-          .dark .chat-container {
-            transition: background-color 0.3s ease;
-          }
-          @media (max-width: 640px) {
-            .chat-container {
-              width: 90vw !important;
-              height: 80vh !important;
-              right: 5vw;
-              bottom: 2rem;
-            }
-            .candle {
-              bottom: 8% !important;
-            }
-          }
-          .chat-container ::-webkit-scrollbar {
-            width: 4px;
-          }
-          .chat-container ::-webkit-scrollbar-thumb {
-            background: rgba(0, 0, 0, 0.1);
-            border-radius: 2px;
-          }
-          .dark .chat-container ::-webkit-scrollbar-thumb {
-            background: rgba(255, 255, 255, 0.1);
-          }
+        }
+
+        .chat-container ::-webkit-scrollbar {
+          width: 4px;
+        }
+
+        .chat-container ::-webkit-scrollbar-thumb {
+          background: rgba(0, 0, 0, 0.1);
+          border-radius: 2px;
+        }
+
+        .dark .chat-container ::-webkit-scrollbar-thumb {
+          background: rgba(255, 255, 255, 0.1);
+        }
+
+        /* Improved touch targets for mobile */
+        @media (max-width: 640px) {
           button {
-            min-width: 44px;
-            min-height: 44px;
+            min-width: 48px;
+            min-height: 48px;
+            padding: 0.75rem;
           }
-        `}
-      </style>
+
+          input {
+            min-height: 48px;
+            font-size: 16px; /* Prevents iOS zoom */
+            padding: 0.75rem 1rem;
+          }
+
+          .chat-toggle-button {
+            bottom: env(safe-area-inset-bottom);
+          }
+        }
+      `}</style>
     </div>
   );
 };
