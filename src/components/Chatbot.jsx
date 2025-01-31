@@ -123,10 +123,17 @@ const Chatbot = () => {
   const handleFileUpload = (e) => {
     const uploadedFile = e.target.files[0];
     if (uploadedFile) {
+      if (!uploadedFile.type.startsWith('image/')) {
+        alert('Please upload an image file only');
+        return;
+      }
+      if (uploadedFile.size > 5 * 1024 * 1024) {
+        alert('File size too large (max 5MB)');
+        return;
+      }
       setFile(uploadedFile);
     }
   };
-
   const handleVoiceInput = () => {
     if (isListening) {
       recognitionRef.current.stop();
@@ -367,10 +374,10 @@ const Chatbot = () => {
   };
 
   return (
-    <div className="fixed bottom-4 right-4 z-50 flex flex-col items-end">
+   <div className="fixed bottom-4 right-4 z-50 flex flex-col items-end">
       {/* Chat Window */}
       {isOpen && (
-        <div className=" md:p-4 p-1  w-[360px] h-[520px] bg-white rounded-2xl shadow-2xl flex flex-col overflow-hidden animate-slideUp">
+        <div className="w-full max-w-[95vw] sm:w-[360px] h-[80vh] sm:h-[520px] bg-white rounded-2xl shadow-2xl flex flex-col overflow-hidden animate-slideUp m-1">
           {/* Header */}
           <div className="bg-gradient-to-r from-blue-600 to-purple-600 p-4 text-white">
             <div className="flex items-center justify-between">
@@ -417,23 +424,29 @@ const Chatbot = () => {
             ) : (
               <>
                 {messages.map((message, index) => (
-                  <div
+                 <div
                     key={index}
-                    className={`flex mb-4 ${message.sender === 'user' ? 'justify-end' : 'justify-start'}`}
+                    className={`flex mb-2 ${message.sender === 'user' ? 'justify-end' : 'justify-start'}`}
                   >
                     <div
-                      className={`max-w-[80%] p-3 rounded-2xl ${
+                      className={`max-w-[90%] sm:max-w-[80%] p-2 sm:p-3 rounded-2xl ${
                         message.sender === 'user'
                           ? 'bg-blue-600 text-white'
                           : 'bg-white text-gray-800 shadow-sm'
                       }`}
                     >
                       {message.file ? (
-                        <a href={message.file} target="_blank" rel="noopener noreferrer" className="text-blue-300 underline">
-                          {message.text}
-                        </a>
+                        <div className="max-w-[200px]">
+                          <img
+                            src={message.file}
+                            alt="Uploaded content"
+                            className="rounded-lg object-cover w-full h-auto"
+                            loading="lazy"
+                          />
+                          <p className="text-xs mt-1 truncate">{message.text}</p>
+                        </div>
                       ) : (
-                        <p>{message.text}</p>
+                        <p className="text-sm sm:text-base">{message.text}</p>
                       )}
                       <p className={`text-xs mt-1 ${
                         message.sender === 'user' ? 'text-blue-100' : 'text-gray-500'
@@ -461,35 +474,51 @@ const Chatbot = () => {
 
           {/* Input Area */}
           {!showNameInput && (
-            <div className="p-2 -ml-2 bg-white border-t">
-              <div className="flex gap-2">
+             <div className="p-1 sm:p-2 bg-white border-t">
+              <div className="flex gap-1 sm:gap-2 items-center">
                 <input
                   type="text"
                   value={userInput}
                   onChange={(e) => setUserInput(e.target.value)}
                   onKeyPress={(e) => e.key === 'Enter' && handleSendMessage()}
                   placeholder="Type your message..."
-                  className="flex-1 px-4 py-2 border rounded-full focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="flex-1 px-2 sm:px-4 py-1 sm:py-2 border rounded-full focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm sm:text-base"
                 />
                 <button
                   onClick={handleVoiceInput}
-                  className={`p-2 rounded-full transition-colors ${
+                  className={`p-1 sm:p-2 rounded-full transition-colors ${
                     isListening ? 'bg-red-500' : 'bg-gray-200 hover:bg-gray-300'
                   }`}
                 >
-                  <Mic size={20} />
+                  <Mic size={18} className="w-4 h-4 sm:w-5 sm:h-5" />
                 </button>
-                <label className="p-2 bg-gray-200 rounded-full hover:bg-gray-300 transition-colors cursor-pointer">
-                  <Upload size={20} />
-                  <input type="file" className="hidden" onChange={handleFileUpload} />
+                <label className="p-1 sm:p-2 bg-gray-200 rounded-full hover:bg-gray-300 transition-colors cursor-pointer">
+                  <Upload size={18} className="w-4 h-4 sm:w-5 sm:h-5" />
+                  <input
+                    type="file"
+                    className="hidden"
+                    onChange={handleFileUpload}
+                    accept="image/*"
+                  />
                 </label>
                 <button
                   onClick={handleSendMessage}
-                  className="p-2 bg-blue-600 text-white rounded-full hover:bg-blue-700 transition-colors"
+                  className="p-1 sm:p-2 bg-blue-600 text-white rounded-full hover:bg-blue-700 transition-colors"
                 >
-                  <Send size={20} />
+                  <Send size={18} className="w-4 h-4 sm:w-5 sm:h-5" />
                 </button>
               </div>
+              {file && (
+                <div className="mt-1 flex items-center gap-1 text-xs sm:text-sm">
+                  <span className="truncate">{file.name}</span>
+                  <button
+                    onClick={() => setFile(null)}
+                    className="text-red-500 hover:text-red-700"
+                  >
+                    <X size={14} />
+                  </button>
+                </div>
+              )}
             </div>
           )}
         </div>
