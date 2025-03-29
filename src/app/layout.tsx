@@ -18,10 +18,50 @@ const geistMono = localFont({
   weight: "100 900",
 });
 
-// Page Metadata
 export const metadata: Metadata = {
-  title: "CodeWithZohaib | Learn Programming Languages & All Courses Online",
-  description: "CodeWithZohaib offers an extensive range of courses to empower you with in-depth knowledge in Next.js, JavaScript, Python, C++, and many other programming languages and frameworks. Whether you're a beginner or an advanced developer, our expert-led tutorials, hands-on projects, and interactive lessons are designed to help you master coding skills and excel in the tech world. Join us today for access to up-to-date resources and start your journey to becoming a skilled developer across all major languages and technologies.",
+  title: "CodeWithZuhaib | Learn Programming Languages & All Courses Online",
+  description: "CodeWithZuhaib offers comprehensive courses in Next.js, JavaScript, Python, C++, and more. From beginner to advanced, our expert-led tutorials, hands-on projects, and interactive lessons help you master coding skills and excel in tech. Start your development journey today with our up-to-date resources across all major languages and frameworks.",
+  keywords: "programming courses, learn coding, web development, Next.js tutorial, JavaScript course, Python programming, C++ learning, coding bootcamp, programming for beginners, full-stack development, software engineering, tech skills, coding certification, online programming classes, learn to code",
+  openGraph: {
+    title: "CodeWithZuhaib | Master Programming Languages With Expert-Led Courses",
+    description: "Transform your career with our comprehensive programming courses. Learn Next.js, JavaScript, Python, C++ and more through practical, project-based tutorials designed for all skill levels.",
+    images: [{ url: "/images/codewithzuhaib-og.jpg", width: 1200, height: 630 }],
+    type: "website",
+    locale: "en_US",
+    url: "https://codewithzuhaib.vercel.app/",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "CodeWithZuhaib | Expert Programming Courses Online",
+    description: "Learn coding from scratch or advance your skills with our comprehensive courses in Next.js, JavaScript, Python, C++ and more.",
+    images: ["/images/codewithzuhaib-twitter.jpg"],
+    creator: "@codewithzuhaib",
+  },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      "max-video-preview": -1,
+      "max-image-preview": "large",
+      "max-snippet": -1,
+    },
+  },
+  canonical: "https://codewithzuhaib.vercel.app/",
+  alternates: {
+    languages: {
+      "en-US": "https://codewithzuhaib.vercel.app/en-US",
+      "es-ES": "https://codewithzuhaib.vercel.app/es-ES",
+    },
+  },
+  authors: [{ name: "Zuhaib" }],
+  category: "Education",
+  verification: {
+    google: "your-google-verification-code",
+    yandex: "your-yandex-verification-code",
+  },
+  metadataBase: new URL("https://codewithzuhaib.vercel.app/"),
 };
 
 // RootLayout Component
