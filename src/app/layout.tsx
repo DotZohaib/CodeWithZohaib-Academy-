@@ -25,7 +25,7 @@ export const metadata: Metadata = {
   openGraph: {
     title: "CodeWithZuhaib | Master Programming Languages With Expert-Led Courses",
     description: "Transform your career with our comprehensive programming courses. Learn Next.js, JavaScript, Python, C++ and more through practical, project-based tutorials designed for all skill levels.",
-    images: [{ url: "/images/codewithzuhaib-og.jpg", width: 1200, height: 630 }],
+    images: [{ url: "/images/WhatsApp Image 2025-02-17 at 22.31.24_129f5135.jpg", width: 1200, height: 630 }],
     type: "website",
     locale: "en_US",
     url: "https://codewithzuhaib.vercel.app/",
@@ -34,7 +34,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: "CodeWithZuhaib | Expert Programming Courses Online",
     description: "Learn coding from scratch or advance your skills with our comprehensive courses in Next.js, JavaScript, Python, C++ and more.",
-    images: ["/images/codewithzuhaib-twitter.jpg"],
+    images: ["/images/WhatsApp Image 2025-02-17 at 22.31.24_129f5135.jpg"],
     creator: "@codewithzuhaib",
   },
   robots: {
