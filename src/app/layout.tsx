@@ -48,13 +48,6 @@ export const metadata: Metadata = {
       "max-snippet": -1,
     },
   },
-  canonical: "https://codewithzuhaib.vercel.app/",
-  alternates: {
-    languages: {
-      "en-US": "https://codewithzuhaib.vercel.app/en-US",
-      "es-ES": "https://codewithzuhaib.vercel.app/es-ES",
-    },
-  },
   authors: [{ name: "Zuhaib" }],
   category: "Education",
   verification: {
