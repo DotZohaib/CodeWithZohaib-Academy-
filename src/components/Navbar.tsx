@@ -3,8 +3,9 @@ import React, { useState, ChangeEvent } from 'react';
 import { ModeToggle } from './ModeToggle';
 import { CiSearch } from "react-icons/ci";
 import { useRouter } from "next/navigation";
-import { array as database } from "./Database"; // Adjust the import based on how you export from your database.ts
+import { array as database } from "./Database";
 import Link from 'next/link';
+
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [toggle, setToggle] = useState(false);
@@ -19,7 +20,7 @@ const Navbar = () => {
     if (value.trim() !== "") {
       const filteredSuggestions = database
         .filter((item) => item.Title.toLowerCase().includes(value.toLowerCase()))
-        .slice(0, 5); // Limit to 5 suggestions
+        .slice(0, 5);
       setSuggestions(filteredSuggestions);
     } else {
       setSuggestions([]);
@@ -28,57 +29,79 @@ const Navbar = () => {
 
   const handleSuggestionClick = (id: number) => {
     router.push(`/questions/${id}`);
-    setSearchTerm(""); // Clear the search input
-    setSuggestions([]); // Hide suggestions
+    setSearchTerm("");
+    setSuggestions([]);
+    setToggle(false); // Close mobile search when suggestion is clicked
   };
 
   const toggleMenu = () => setIsOpen((prev) => !prev);
   const handleClickFunc = () => setToggle(!toggle);
 
   return (
-    <div className="bg-slate-50 z-50 shadow-lg h-20 text-gray-800 sticky top-0 w-full">
-      <div className="flex items-center justify-between px-3 md:px-6 py-4">
-        {/* Logo */}
-        <div className="md:text-2xl text-xl font-serif font-bold text-pink-700">
-          <b className="font-bold">&lt;/&gt;</b> CodeWithZohaib
+    <div className="bg-slate-50 z-50 shadow-lg text-gray-800 sticky top-0 w-full">
+      {/* Main Navbar Container */}
+      <div className="flex items-center justify-between px-3 sm:px-4 md:px-6 lg:px-8 py-4 min-h-[4rem]">
+        
+        {/* Logo - Responsive sizing */}
+        <div className="text-lg sm:text-xl md:text-2xl font-serif font-bold text-pink-700 flex-shrink-0">
+          <span className="font-bold">&lt;/&gt;</span>
+          <span className="hidden xs:inline ml-1">CodeWithZohaib</span>
+          <span className="xs:hidden ml-1">Code</span>
         </div>
 
-        {/* Centered Search Bar */}
-        <div className="hidden md:flex items-center justify-center w-full max-w-xl">
+        {/* Desktop Search Bar - Hidden on mobile/tablet */}
+        <div className="hidden lg:flex items-center justify-center flex-1 max-w-2xl mx-4">
           <div className="relative w-full">
             <input
-              className="w-full py-2 pl-12 pr-4 border border-gray-300 rounded-full shadow-sm focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition duration-300"
+              className="w-full py-2.5 pl-12 pr-4 border border-gray-300 rounded-full shadow-sm focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 transition duration-300 text-sm"
               type="search"
               value={searchTerm}
               onChange={handleSearch}
-              placeholder="Search..."
+              placeholder="Search questions..."
             />
             <div className="absolute inset-y-0 left-4 flex items-center text-gray-400">
-              <CiSearch className="text-2xl" />
+              <CiSearch className="text-xl" />
             </div>
           </div>
         </div>
 
-        {/* Right-side Menu */}
-        <div className="flex items-center space-x-4">
-          {/* Mobile Search Icon */}
-          <CiSearch onClick={handleClickFunc} className="md:hidden text-3xl text-gray-600 cursor-pointer" />
+        {/* Right Side Controls */}
+        <div className="flex items-center space-x-2 sm:space-x-3 md:space-x-4">
+          
+          {/* Mobile/Tablet Search Icon */}
+          <button 
+            onClick={handleClickFunc} 
+            className="lg:hidden p-2 text-gray-600 hover:text-pink-700 transition-colors duration-200"
+            aria-label="Toggle search"
+          >
+            <CiSearch className="text-2xl sm:text-3xl" />
+          </button>
 
           {/* Mode Toggle */}
-          <ModeToggle />
+          <div className="flex-shrink-0">
+            <ModeToggle />
+          </div>
 
-          {/* Desktop Login/Signup Buttons */}
+          {/* Desktop Buttons - Hidden on mobile/tablet */}
           <div className="hidden md:flex space-x-2">
-            <button  className="bg-pink-700 text-white py-2 px-4 rounded-full hover:bg-pink-600 transition duration-300">
-            <Link href='/Connect'> Connect</Link>
-            </button>
-            <button  className="bg-pink-700 text-white py-2 px-4 rounded-full hover:bg-pink-600 transition duration-300">
-              <Link href='/Add'>Add</Link>
-            </button>
+            <Link href='/Connect'>
+              <button className="bg-pink-700 text-white py-2 px-4 lg:px-6 rounded-full hover:bg-pink-600 transition duration-300 text-sm lg:text-base font-medium">
+                Connect
+              </button>
+            </Link>
+            <Link href='/Add'>
+              <button className="bg-pink-700 text-white py-2 px-4 lg:px-6 rounded-full hover:bg-pink-600 transition duration-300 text-sm lg:text-base font-medium">
+                Add
+              </button>
+            </Link>
           </div>
 
           {/* Mobile Hamburger Menu */}
-          <button onClick={toggleMenu} className="md:hidden">
+          <button 
+            onClick={toggleMenu} 
+            className="md:hidden p-2 hover:bg-gray-100 rounded-lg transition-colors duration-200"
+            aria-label="Toggle menu"
+          >
             <svg
               xmlns="http://www.w3.org/2000/svg"
               fill="none"
@@ -87,56 +110,78 @@ const Navbar = () => {
               stroke="currentColor"
               className="w-6 h-6 text-pink-700"
             >
-              <path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h16m-7 6h7" />
+              {isOpen ? (
+                <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+              ) : (
+                <path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h16m-7 6h7" />
+              )}
             </svg>
           </button>
         </div>
       </div>
 
-      {/* Mobile Search Bar */}
+      {/* Mobile/Tablet Search Bar */}
       {toggle && (
-        <div className="flex md:hidden justify-center px-6 py-2">
-          <div className="relative w-full max-w-md">
+        <div className="lg:hidden px-3 sm:px-4 md:px-6 py-3 bg-slate-50 border-t border-gray-200">
+          <div className="relative w-full max-w-lg mx-auto">
             <input
-              className="w-full py-2 pl-12 pr-4 border border-gray-300 rounded-full shadow-sm focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition duration-300"
+              className="w-full py-2.5 pl-12 pr-4 border border-gray-300 rounded-full shadow-sm focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 transition duration-300 text-sm"
               type="search"
               value={searchTerm}
               onChange={handleSearch}
-              placeholder="Search..."
+              placeholder="Search questions..."
             />
             <div className="absolute inset-y-0 left-4 flex items-center text-gray-400">
-              <CiSearch className="text-2xl" />
+              <CiSearch className="text-xl" />
             </div>
           </div>
         </div>
       )}
 
-      {/* Responsive Navbar (Mobile) */}
+      {/* Mobile Menu Dropdown */}
       {isOpen && (
-        <div className="md:hidden flex flex-col items-center p-4 space-y-2 bg-slate-100">
-          <button className="bg-pink-700 text-white py-2 px-6 rounded-full w-full text-center hover:bg-pink-600 transition duration-300">
-          <Link href='/Connect'>Connect</Link>
-          </button>
-          <button className="bg-pink-700 text-white py-2 px-6 rounded-full w-full text-center hover:bg-pink-600 transition duration-300">
-          <Link href='/Add'>Add Questions</Link>
-          </button>
+        <div className="md:hidden bg-slate-100 border-t border-gray-200 py-4 px-3 sm:px-4">
+          <div className="flex flex-col space-y-3 max-w-sm mx-auto">
+            <Link href='/Connect'>
+              <button 
+                className="w-full bg-pink-700 text-white py-3 px-6 rounded-full hover:bg-pink-600 transition duration-300 text-sm font-medium"
+                onClick={() => setIsOpen(false)}
+              >
+                Connect
+              </button>
+            </Link>
+            <Link href='/Add'>
+              <button 
+                className="w-full bg-pink-700 text-white py-3 px-6 rounded-full hover:bg-pink-600 transition duration-300 text-sm font-medium"
+                onClick={() => setIsOpen(false)}
+              >
+                Add Questions
+              </button>
+            </Link>
+          </div>
         </div>
       )}
 
       {/* Search Suggestions Dropdown */}
       {suggestions.length > 0 && (
-        <div className='flex justify-center w-full'>
-          <ul className="w-full max-w-xl bg-white border border-gray-300 mt-2 rounded-lg shadow-lg overflow-hidden z-10">
-            {suggestions.map((suggestion) => (
-              <li
-                key={suggestion.id}
-                onClick={() => handleSuggestionClick(suggestion.id)}
-                className="p-3 cursor-pointer hover:bg-indigo-100 transition duration-200 text-gray-700"
-              >
-                {suggestion.Title}
-              </li>
-            ))}
-          </ul>
+        <div className="absolute left-0 right-0 z-50 px-3 sm:px-4 md:px-6 lg:px-8">
+          <div className="mx-auto max-w-2xl">
+            <ul className="bg-white border border-gray-300 rounded-lg shadow-lg overflow-hidden">
+              {suggestions.map((suggestion, index) => (
+                <li
+                  key={suggestion.id}
+                  onClick={() => handleSuggestionClick(suggestion.id)}
+                  className={`p-3 sm:p-4 cursor-pointer hover:bg-indigo-50 transition duration-200 text-gray-700 text-sm sm:text-base ${
+                    index !== suggestions.length - 1 ? 'border-b border-gray-100' : ''
+                  }`}
+                >
+                  <div className="truncate">
+                    {suggestion.Title}
+                  </div>
+                </li>
+              ))}
+            </ul>
+          </div>
         </div>
       )}
     </div>
