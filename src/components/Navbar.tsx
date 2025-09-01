@@ -46,7 +46,7 @@ const Navbar = () => {
         <div className="text-lg sm:text-xl md:text-2xl font-serif font-bold text-pink-700 flex-shrink-0">
           <span className="font-bold">&lt;/&gt;</span>
           <span className="hidden xs:inline ml-1">CodeWithZohaib</span>
-          <span className="xs:hidden ml-1">Code</span>
+          <span className="xs:hidden ml-1">CodeWithZohaib</span>
         </div>
 
         {/* Desktop Search Bar - Hidden on mobile/tablet */}
@@ -189,3 +189,4 @@ const Navbar = () => {
 };
 
 export default Navbar;
+
