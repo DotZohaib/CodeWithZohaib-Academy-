@@ -1,8 +1,8 @@
 'use client';
 import React, { useState, useEffect, useRef } from 'react';
-import { MessageCircle, Send, X, Bot, ArrowLeft, Mic, Upload } from 'lucide-react';
+import { MessageCircle, Send, X, Bot, Mic, Upload, Phone, Mail, Globe, Code, BookOpen, Users, Star, Award, ChevronDown } from 'lucide-react';
 
-const Chatbot = () => {
+const ProfessionalChatbot = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState([]);
   const [userInput, setUserInput] = useState('');
@@ -12,12 +12,13 @@ const Chatbot = () => {
   const [unreadCount, setUnreadCount] = useState(0);
   const [isListening, setIsListening] = useState(false);
   const [file, setFile] = useState(null);
+  const [showQuickActions, setShowQuickActions] = useState(false);
   const messagesEndRef = useRef(null);
   const recognitionRef = useRef(null);
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
-      const storedUserName = localStorage.getItem('userName') || '';
+      const storedUserName = sessionStorage.getItem('chatUserName') || '';
       setUserName(storedUserName);
       setShowNameInput(!storedUserName);
 
@@ -33,10 +34,7 @@ const Chatbot = () => {
           setUserInput(transcript);
           setIsListening(false);
         };
-        recognitionRef.current.onerror = (event) => {
-          console.error('Speech recognition error:', event.error);
-          setIsListening(false);
-        };
+        recognitionRef.current.onerror = () => setIsListening(false);
       }
     }
   }, []);
@@ -53,19 +51,13 @@ const Chatbot = () => {
     if (userName && messages.length === 0) {
       setTimeout(() => {
         setMessages([{
-          text: `Hi ${userName}! 👋 How can I assist you today?`,
+          text: `Welcome to CodeWithZuhaib Academy, ${userName}! 🎓 I'm your learning assistant. How can I help you today?`,
           sender: "bot",
           time: new Date()
         }]);
-        speak(`Hi ${userName}! How can I assist you today?`);
       }, 1000);
     }
   }, [userName]);
-
-  const speak = (text) => {
-    const utterance = new SpeechSynthesisUtterance(text);
-    window.speechSynthesis.speak(utterance);
-  };
 
   const handleToggle = () => {
     setIsOpen(!isOpen);
@@ -76,19 +68,33 @@ const Chatbot = () => {
 
   const handleNameSubmit = () => {
     if (userInput.trim()) {
-      localStorage.setItem('userName', userInput);
+      sessionStorage.setItem('chatUserName', userInput);
       setUserName(userInput);
       setShowNameInput(false);
       setUserInput('');
     }
   };
 
-  const handleSendMessage = async () => {
-    if (!userInput.trim() && !file) return;
+  const quickActions = [
+    { icon: Code, text: "Courses Available", action: "What programming courses do you offer?" },
+    { icon: BookOpen, text: "Free Resources", action: "What free learning resources are available?" },
+    { icon: Users, text: "Contact Info", action: "How can I contact CodeWithZuhaib?" },
+    { icon: Award, text: "Certifications", action: "Do you provide certificates?" }
+  ];
+
+  const handleQuickAction = (action) => {
+    setUserInput(action);
+    setShowQuickActions(false);
+    setTimeout(() => handleSendMessage(action), 100);
+  };
+
+  const handleSendMessage = async (quickMessage = null) => {
+    const messageText = quickMessage || userInput.trim();
+    if (!messageText && !file) return;
 
     if (file) {
       const newMessage = {
-        text: `File: ${file.name}`,
+        text: `📎 ${file.name}`,
         sender: "user",
         time: new Date(),
         file: URL.createObjectURL(file)
@@ -97,9 +103,9 @@ const Chatbot = () => {
       setFile(null);
     }
 
-    if (userInput.trim()) {
+    if (messageText) {
       const newMessage = {
-        text: userInput,
+        text: messageText,
         sender: "user",
         time: new Date()
       };
@@ -108,33 +114,38 @@ const Chatbot = () => {
       setIsTyping(true);
 
       setTimeout(async () => {
-        const response = await getBotResponse(userInput);
+        const response = await getBotResponse(messageText);
         setMessages(prev => [...prev, {
           text: response,
           sender: "bot",
           time: new Date()
         }]);
-        speak(response);
         setIsTyping(false);
-      }, Math.random() * 1000 + 1000);
+        
+        if (!isOpen) {
+          setUnreadCount(prev => prev + 1);
+        }
+      }, Math.random() * 1500 + 1000);
     }
   };
 
   const handleFileUpload = (e) => {
     const uploadedFile = e.target.files[0];
     if (uploadedFile) {
-      if (!uploadedFile.type.startsWith('image/')) {
-        alert('Please upload an image file only');
-        return;
-      }
-      if (uploadedFile.size > 5 * 1024 * 1024) {
-        alert('File size too large (max 5MB)');
+      if (uploadedFile.size > 10 * 1024 * 1024) {
+        alert('File size too large (max 10MB)');
         return;
       }
       setFile(uploadedFile);
     }
   };
+
   const handleVoiceInput = () => {
+    if (!recognitionRef.current) {
+      alert('Speech recognition not supported in your browser');
+      return;
+    }
+    
     if (isListening) {
       recognitionRef.current.stop();
       setIsListening(false);
@@ -145,380 +156,299 @@ const Chatbot = () => {
   };
 
   const getBotResponse = async (input) => {
-       const responses = [
-      { keywords: ['hi', 'hello', 'hey'], response: `Hello! How can I help you today? 👋` },
-      { keywords: ['bye', 'goodbye'], response: "Goodbye! Have a great day! 👋" },
-      { keywords: ['thanks', 'thank you'], response: "You're welcome! Is there anything else you need? 😊" },
-      { keywords: ['help'], response: "I'm here to help! What can I assist you with? 💡" },
-      { keywords: ['name'], response: "I'm Zohaib Ali." },
-      { keywords: ['do', 'work'], response: "I am a Full Stack Developer specializing in MERN Stack." },
-      { keywords: ['experience', 'years'], response: "I have several years of experience in web development and IT." },
-      { keywords: ['technologies', 'use'], response: "I work with React.js, Next.js, Node.js, Express, MongoDB, and Tailwind CSS." },
-      { keywords: ['skills'], response: "My skills include web development, AI, machine learning, and cyber security." },
-      { keywords: ['food', 'favorite'], response: "I love Biryani!" },
-      { keywords: ['ai', 'artificial intelligence'], response: "I'm passionate about AI, particularly in natural language processing (NLP), machine learning (ML), and deep learning (DL)." },
-      { keywords: ['projects', 'work'], response: "I've worked on e-commerce websites, AI chatbots, machine learning models, and portfolio sites." },
-      { keywords: ['contact', 'reach'], response: "You can contact me via email at Zuhaibalid@gmail.com." },
-      { keywords: ['website'], response: "My website is [www.CodeWithZohaib.com](https://www.CodeWithZohaib.com)." },
-      { keywords: ['hiring'], response: "Feel free to contact me through my website or email to discuss availability." },
-      { keywords: ['programming', 'language'], response: "I enjoy working with JavaScript, Python, and R, especially for data science and AI." },
-      { keywords: ['schedule', 'availability'], response: "You can check my availability by contacting me via email or through my website." },
-      { keywords: ['expertise', 'web development'], response: "I have expertise in front-end and back-end development, with a focus on security and performance." },
-      { keywords: ['services'], response: "I offer full-stack web development, AI/ML solutions, and digital marketing services." },
-      { keywords: ['passion'], response: "I’m passionate about web development, machine learning, and AI." },
-      { keywords: ['cloud', 'computing'], response: "Cloud computing allows remote servers to store, manage, and process data over the internet." },
-      { keywords: ['ml', 'machine learning'], response: "Machine Learning (ML) is a branch of AI that enables computers to learn from data and improve over time without being explicitly programmed." },
-      { keywords: ['dl', 'deep learning'], response: "Deep Learning (DL) is a subset of ML that uses neural networks with many layers to model complex patterns in data." },
-      { keywords: ['nlp'], response: "Natural Language Processing (NLP) focuses on the interaction between computers and humans through natural language, enabling machines to understand, interpret, and generate human language." },
-      { keywords: ['security', 'web security'], response: "Web security involves protecting websites from attacks, unauthorized access, and vulnerabilities." },
-      { keywords: ['optimize', 'performance'], response: "I optimize websites through performance tuning, minimizing load times, and ensuring a smooth user experience." },
-      { keywords: ['motivates'], response: "I’m motivated by solving challenging problems and delivering quality results." },
-      { keywords: ['challenges', 'in', 'development'], response: "Challenges in development often lead to valuable learning experiences." },
-      { keywords: ['maintaining', 'quality'], response: "I focus on maintaining quality throughout the development process." },
-      { keywords: ['time', 'management', 'techniques'], response: "I use techniques like the Pomodoro Technique to manage my time." },
-      { keywords: ['goals', 'for', 'next', 'year'], response: "My goals for next year include expanding my skills in AI, machine learning, and cloud computing." },
-      { keywords: ['learning', 'from', 'mistakes'], response: "I believe in learning from my mistakes to grow as a developer." },
-      { keywords: ['approach', 'to', 'design'], response: "I take a user-centered approach to design." },
-      { keywords: ['continuous', 'learning'], response: "I engage in continuous learning to stay updated with the latest technologies." },
-      { keywords: ['balancing', 'work', 'and', 'personal', 'life'], response: "I balance work and personal life by scheduling time for both." },
-      { keywords: ['skills', 'to', 'develop'], response: "I am looking to develop my skills in AI, deep learning, and data science." },
-      { keywords: ['collaborative', 'tools'], response: "I use collaborative tools like GitHub for version control." },
-      { keywords: ['importance', 'of', 'communication'], response: "Communication is key to successful teamwork." },
-      { keywords: ['code', 'review', 'process'], response: "I participate in code reviews to learn from others and improve my coding." },
-      { keywords: ['work', 'philosophy'], response: "My work philosophy is to always strive for excellence and improvement." },
-      { keywords: ['favorite', 'podcast'], response: "My favorite podcast is about AI, technology trends, and insights." },
-      { keywords: ['career', 'advice'], response: "My best career advice is to find a mentor and learn from their experience." },
-      { keywords: ['how', 'to', 'stay', 'focused'], response: "I stay focused by minimizing distractions and setting clear goals." },
-      { keywords: ['creative', 'process'], response: "My creative process involves brainstorming and prototyping ideas." },
-      { keywords: ['learning', 'from', 'others'], response: "I value learning from others’ experiences and insights." },
-      { keywords: ['passion', 'for', 'technology'], response: "My passion for technology drives my career choices." },
-      { keywords: ['what', 'drives', 'you'], response: "I am driven by the desire to create meaningful and impactful solutions." },
-      { keywords: ['dealing', 'with', 'failure'], response: "I deal with failure by analyzing what went wrong and adjusting my approach." },
-      { keywords: ['importance', 'of', 'teamwork'], response: "Teamwork is essential for achieving complex project goals." },
-      { keywords: ['impact', 'of', 'AI'], response: "I believe AI will significantly impact various industries, including healthcare, finance, and transportation, in the coming years." },
-      { keywords: ['how', 'to', 'stay', 'updated'], response: "I stay updated by following tech news, AI/ML blogs, and attending relevant conferences." },
-      { keywords: ['project', 'management', 'tools'], response: "I use tools like Trello, Asana, and Jira for project management." },
-      { keywords: ['ai', 'artificial intelligence'], response: "I'm passionate about AI, particularly in NLP and deep learning." },
-      { keywords: ['projects', 'work'], response: "I've worked on e-commerce websites, AI chatbots, and portfolio sites." },
-      { keywords: ['contact', 'reach'], response: "You can contact me via email at Zuhaibalid@gmail.com." },
-      { keywords: ['website'], response: "My website is [www.CodeWithZohaib.com](https://www.CodeWithZohaib.com)." },
-      { keywords: ['hiring'], response: "Feel free to contact me through my website or email to discuss availability." },
-      { keywords: ['programming', 'language'], response: "I enjoy working with JavaScript and Python." },
-      { keywords: ['schedule', 'availability'], response: "You can check my availability by contacting me via email or through my website." },
-      { keywords: ['expertise', 'web development'], response: "I have expertise in front-end and back-end development, with a focus on security and performance." },
-      { keywords: ['services'], response: "I offer full-stack web development, AI solutions, and digital marketing services." },
-      { keywords: ['passion'], response: "I’m passionate about web development and AI." },
-      { keywords: ['cloud', 'computing'], response: "Cloud computing allows remote servers to store, manage, and process data over the internet." },
-      { keywords: ['nlp'], response: "NLP stands for Natural Language Processing, focused on human-computer interactions." },
-      { keywords: ['security', 'web security'], response: "Web security involves protecting websites from attacks, unauthorized access, and vulnerabilities." },
-      { keywords: ['optimize', 'performance'], response: "I optimize websites through performance tuning, minimizing load times, and ensuring a smooth user experience." },
-      { keywords: ['motivates'], response: "I’m motivated by solving challenging problems and delivering quality results." },
-      { keywords: ['favorite', 'hobby'], response: "In my free time, I enjoy reading books and exploring new technologies." },
-      { keywords: ['learning', 'process'], response: "I believe in continuous learning and regularly take online courses to improve my skills." },
-      { keywords: ['teamwork'], response: "I value teamwork and collaboration in projects, as it leads to better outcomes." },
-      { keywords: ['leadership'], response: "I enjoy taking the lead on projects and guiding teams towards achieving their goals." },
-      { keywords: ['challenges', 'face'], response: "I face challenges head-on and view them as opportunities for growth." },
-      { keywords: ['work', 'ethic'], response: "I have a strong work ethic and am dedicated to delivering high-quality work." },
-      { keywords: ['current', 'projects'], response: "Currently, I am working on a personal portfolio and several freelance projects." },
-      { keywords: ['technology', 'interested'], response: "I am interested in emerging technologies like blockchain and quantum computing." },
-      { keywords: ['code', 'review'], response: "I believe code reviews are essential for maintaining code quality and team learning." },
-      { keywords: ['frameworks', 'used'], response: "Besides MERN, I also work with Angular and Vue.js for front-end development." },
-      { keywords: ['version', 'control'], response: "I use Git for version control and collaboration on projects." },
-      { keywords: ['database', 'experience'], response: "I have experience working with both SQL and NoSQL databases." },
-      { keywords: ['user', 'experience'], response: "I prioritize user experience in all my projects to ensure usability and accessibility." },
-      { keywords: ['testing', 'code'], response: "I write unit tests to ensure my code is reliable and maintainable." },
-      { keywords: ['deploy', 'applications'], response: "I have experience deploying applications on platforms like Vercel and Heroku." },
-      { keywords: ['responsive', 'design'], response: "I implement responsive design to ensure my applications work on all devices." },
-      { keywords: ['web', 'accessibility'], response: "I follow best practices for web accessibility to make my sites usable for everyone." },
-      { keywords: ['community', 'involvement'], response: "I am active in the developer community and participate in local meetups." },
-      { keywords: ['future', 'goals'], response: "My future goals include expanding my knowledge in AI and contributing to open-source projects." },
-      { keywords: ['data', 'science'], response: "I have a keen interest in data science and analytics." },
-      { keywords: ['machine', 'learning'], response: "I explore machine learning techniques to enhance applications." },
-      { keywords: ['test', 'driven', 'development'], response: "I practice test-driven development to create robust applications." },
-      { keywords: ['collaboration'], response: "I enjoy collaborating with designers to create visually appealing applications." },
-      { keywords: ['freelance'], response: "I take on freelance projects to diversify my experience and income." },
-      { keywords: ['design', 'principles'], response: "I follow design principles like alignment, contrast, and repetition for better UI." },
-      { keywords: ['best', 'practices'], response: "I adhere to best practices in coding, such as writing clean and maintainable code." },
-      { keywords: ['automation'], response: "I automate repetitive tasks to increase efficiency in my workflow." },
-      { keywords: ['community', 'contributions'], response: "I contribute to open-source projects and help other developers." },
-      { keywords: ['tools', 'use'], response: "I use tools like Figma for design and Postman for API testing." },
-      { keywords: ['frameworks', 'preferences'], response: "I prefer React for front-end development due to its flexibility." },
-      { keywords: ['motivational', 'quote'], response: "I believe in the quote: 'Success is not the key to happiness. Happiness is the key to success.'" },
-      { keywords: ['time', 'management'], response: "I prioritize tasks and set deadlines to manage my time effectively." },
-      { keywords: ['work', 'balance'], response: "I strive to maintain a healthy work-life balance." },
-      { keywords: ['goal', 'setting'], response: "I set SMART goals to track my progress." },
-      { keywords: ['portfolio', 'importance'], response: "A portfolio showcases my skills and projects to potential employers." },
-      { keywords: ['mentorship'], response: "I value mentorship and seek guidance from experienced professionals." },
-      { keywords: ['networking'], response: "I actively network to expand my connections in the industry." },
-      { keywords: ['innovation'], response: "I embrace innovation and explore new ideas in my projects." },
-      { keywords: ['future', 'trends'], response: "I keep an eye on future trends in technology to stay ahead." },
-      { keywords: ['code', 'quality'], response: "I prioritize code quality by following coding standards." },
-      { keywords: ['feedback'], response: "I welcome feedback to improve my work." },
-      { keywords: ['research'], response: "I conduct research to stay updated on industry developments." },
-      { keywords: ['documentation'], response: "I document my projects for better understanding and collaboration." },
-      { keywords: ['technical', 'writing'], response: "I enjoy technical writing and share my knowledge through articles." },
-      { keywords: ['virtual', 'events'], response: "I participate in virtual events and webinars to learn and network." },
-      { keywords: ['workshops'], response: "I attend workshops to enhance my skills." },
-      { keywords: ['team', 'collaboration'], response: "I believe teamwork leads to better results." },
-      { keywords: ['conflict', 'resolution'], response: "I approach conflicts calmly and seek mutual understanding." },
-      { keywords: ['code', 'optimization'], response: "I optimize code for better performance and readability." },
-      { keywords: ['application', 'security'], response: "I implement security best practices in applications." },
-      { keywords: ['data', 'protection'], response: "I take data protection seriously and follow regulations." },
-      { keywords: ['user', 'feedback'], response: "I use user feedback to improve applications." },
-      { keywords: ['agile', 'methodologies'], response: "I am familiar with Agile methodologies for project management." },
-      { keywords: ['scrum'], response: "I have experience working in Scrum teams." },
-      { keywords: ['project', 'management'], response: "I use tools like Trello and Asana for project management." },
-      { keywords: ['client', 'communication'], response: "I maintain clear communication with clients throughout projects." },
-      { keywords: ['design', 'process'], response: "I follow a structured design process to ensure project success." },
-      { keywords: ['software', 'lifecycle'], response: "I understand the software development lifecycle (SDLC) and its phases." },
-      { keywords: ['problem', 'solving'], response: "I excel in problem-solving and critical thinking." },
-      { keywords: ['adaptability'], response: "I adapt quickly to new tools and technologies." },
-      { keywords: ['entrepreneurship'], response: "I have an interest in entrepreneurship and startup culture." },
-      { keywords: ['skills', 'development'], response: "I invest time in developing new skills to stay competitive." },
-      { keywords: ['success', 'definition'], response: "Success is achieving personal and professional goals." },
-      { keywords: ['client', 'satisfaction'], response: "Client satisfaction is my top priority." },
-      { keywords: ['future', 'aspirations'], response: "I aspire to lead a development team in the future." },
-      { keywords: ['life', 'goals'], response: "My life goals include continuous learning and making a positive impact." },
-      { keywords: ['career', 'path'], response: "I envision a successful career in tech with leadership roles." },
-      { keywords: ['philosophy'], response: "My philosophy is to always strive for excellence." },
-      { keywords: ['why', 'developer'], response: "I became a developer because I enjoy solving problems and creating innovative solutions." },
-      { keywords: ['work', 'motivation'], response: "I am motivated by the impact my work can have on users and businesses." },
-      { keywords: ['favorite', 'language'], response: "My favorite programming language is JavaScript due to its versatility." },
-      { keywords: ['software', 'interests'], response: "I am interested in software development methodologies and best practices." },
-      { keywords: ['front-end', 'technologies'], response: "I work with HTML, CSS, and JavaScript for front-end development." },
-      { keywords: ['back-end', 'technologies'], response: "For back-end development, I primarily use Node.js and Express." },
-      { keywords: ['responsive', 'web', 'design'], response: "Responsive web design ensures my applications look good on all devices." },
-      { keywords: ['favorite', 'project'], response: "My favorite project was building an AI chatbot for a client." },
-      { keywords: ['learning', 'resources'], response: "I use online platforms like Coursera and Udemy for learning new skills." },
-      { keywords: ['coding', 'challenges'], response: "I enjoy taking on coding challenges to improve my problem-solving skills." },
-      { keywords: ['latest', 'technologies'], response: "I keep updated with the latest technologies by following industry blogs." },
-      { keywords: ['collaboration', 'tools'], response: "I use Slack and Microsoft Teams for team collaboration." },
-      { keywords: ['user', 'testing'], response: "User testing helps me gather feedback on my applications." },
-      { keywords: ['tech', 'community'], response: "I actively engage with the tech community through forums and meetups." },
-      { keywords: ['personal', 'projects'], response: "I have several personal projects that I work on during my free time." },
-      { keywords: ['favorite', 'framework'], response: "My favorite framework is React because of its component-based architecture." },
-      { keywords: ['biggest', 'inspiration'], response: "My biggest inspiration is seeing the positive impact of technology on society." },
-      { keywords: ['career', 'development'], response: "I focus on continuous career development through learning and networking." },
-      { keywords: ['favorite', 'book'], response: "My favorite book is 'Clean Code' by Robert C. Martin." },
-      { keywords: ['importance', 'mentorship'], response: "Mentorship is important for personal and professional growth." },
-      { keywords: ['future', 'tech', 'interests'], response: "I am particularly interested in the future of AI and automation." },
-      { keywords: ['problem', 'solving', 'skills'], response: "I continuously work on improving my problem-solving skills." },
-      { keywords: ['software', 'architecture'], response: "I study software architecture to design scalable applications." },
-      { keywords: ['network', 'security'], response: "I understand the basics of network security to protect applications." },
-      { keywords: ['cloud', 'technologies'], response: "I am learning about cloud technologies like AWS and Azure." },
-      { keywords: ['interview', 'preparation'], response: "I prepare for interviews by practicing common coding challenges." },
-      { keywords: ['team', 'building'], response: "I enjoy team-building activities that foster collaboration." },
-      { keywords: ['experience', 'learning'], response: "I believe real-world experience is the best way to learn." },
-      { keywords: ['advice', 'new', 'developers'], response: "My advice for new developers is to never stop learning and practicing." },
-      { keywords: ['favorite', 'tool'], response: "My favorite tool for coding is Visual Studio Code." },
-      { keywords: ['maintain', 'work-life', 'balance'], response: "I maintain work-life balance by setting clear boundaries." },
-      { keywords: ['biggest', 'challenge'], response: "My biggest challenge was learning how to effectively manage time in projects." },
-      { keywords: ['software', 'lifecycle', 'phases'], response: "I understand the phases of the software development lifecycle." },
-      { keywords: ['collaborative', 'environment'], response: "I thrive in collaborative environments where ideas can flow freely." },
-      { keywords: ['remote', 'work'], response: "I have experience working remotely and enjoy the flexibility it offers." },
-      { keywords: ['technology', 'trends'], response: "I stay updated on technology trends by reading articles and attending webinars." },
-      { keywords: ['testing', 'importance'], response: "Testing is crucial for delivering reliable and bug-free applications." },
-      { keywords: ['biggest', 'achievement'], response: "My biggest achievement was launching a successful e-commerce platform." },
-      { keywords: ['strategies', 'project', 'management'], response: "I use Agile strategies for effective project management." },
-      { keywords: ['passion', 'development'], response: "My passion for development drives me to create innovative solutions." },
-      { keywords: ['coding', 'practices'], response: "I follow best coding practices to write maintainable code." },
-      { keywords: ['user', 'feedback', 'importance'], response: "User feedback is vital for improving user experience." },
-      { keywords: ['biggest', 'lessons'], response: "My biggest lessons come from failures and mistakes." },
-      { keywords: ['adapting', 'to', 'change'], response: "I adapt quickly to changes in technology and project requirements." },
-      { keywords: ['code', 'refactoring'], response: "I regularly refactor my code to improve its structure and performance." },
-      { keywords: ['learning', 'by', 'doing'], response: "I believe in learning by doing and building real projects." },
-      { keywords: ['staying', 'motivated'], response: "I stay motivated by setting personal goals and celebrating achievements." },
-      { keywords: ['impact', 'of', 'technology'], response: "I am fascinated by the impact of technology on everyday life." },
-      { keywords: ['project', 'collaboration'], response: "I collaborate with designers and developers for project success." },
-      { keywords: ['data', 'analytics'], response: "I use data analytics to make informed decisions in projects." },
-      { keywords: ['security', 'best', 'practices'], response: "I implement security best practices in all my applications." },
-      { keywords: ['future', 'of', 'work'], response: "I believe the future of work will be heavily influenced by technology." },
-      { keywords: ['importance', 'of', 'testing'], response: "Testing is crucial to ensure application functionality and user satisfaction." },
-      { keywords: ['challenges', 'in', 'development'], response: "Challenges in development often lead to valuable learning experiences." },
-      { keywords: ['maintaining', 'quality'], response: "I focus on maintaining quality throughout the development process." },
-      { keywords: ['time', 'management', 'techniques'], response: "I use techniques like the Pomodoro Technique to manage my time." },
-      { keywords: ['goals', 'for', 'next', 'year'], response: "My goals for next year include expanding my skills in AI and cloud computing." },
-      { keywords: ['learning', 'from', 'mistakes'], response: "I believe in learning from my mistakes to grow as a developer." },
-      { keywords: ['approach', 'to', 'design'], response: "I take a user-centered approach to design." },
-      { keywords: ['continuous', 'learning'], response: "I engage in continuous learning to stay updated with the latest technologies." },
-      { keywords: ['balancing', 'work', 'and', 'personal', 'life'], response: "I balance work and personal life by scheduling time for both." },
-      { keywords: ['skills', 'to', 'develop'], response: "I am looking to develop my skills in AI and data science." },
-      { keywords: ['collaborative', 'tools'], response: "I use collaborative tools like GitHub for version control." },
-      { keywords: ['importance', 'of', 'communication'], response: "Communication is key to successful teamwork." },
-      { keywords: ['code', 'review', 'process'], response: "I participate in code reviews to learn from others and improve my coding." },
-      { keywords: ['work', 'philosophy'], response: "My work philosophy is to always strive for excellence and improvement." },
-      { keywords: ['favorite', 'podcast'], response: "My favorite podcast is about technology trends and insights." },
-      { keywords: ['career', 'advice'], response: "My best career advice is to find a mentor and learn from their experience." },
-      { keywords: ['how', 'to', 'stay', 'focused'], response: "I stay focused by minimizing distractions and setting clear goals." },
-      { keywords: ['creative', 'process'], response: "My creative process involves brainstorming and prototyping ideas." },
-      { keywords: ['learning', 'from', 'others'], response: "I value learning from others’ experiences and insights." },
-      { keywords: ['passion', 'for', 'technology'], response: "My passion for technology drives my career choices." },
-      { keywords: ['what', 'drives', 'you'], response: "I am driven by the desire to create meaningful and impactful solutions." },
-      { keywords: ['dealing', 'with', 'failure'], response: "I deal with failure by analyzing what went wrong and adjusting my approach." },
-      { keywords: ['importance', 'of', 'teamwork'], response: "Teamwork is essential for achieving complex project goals." },
-      { keywords: ['impact', 'of', 'AI'], response: "I believe AI will significantly impact various industries in the coming years." },
-      { keywords: ['how', 'to', 'stay', 'updated'], response: "I stay updated by following tech news, blogs, and podcasts." },
-      { keywords: ['project', 'management', 'tools'], response: "I use tools like Trello and Asana for project management." },
-      { keywords: ['impact', 'of', 'user', 'experience'], response: "User experience greatly impacts user satisfaction and retention." },
-
+    const responses = [
+      {
+        keywords: ['hi', 'hello', 'hey', 'greetings'],
+        response: `Hello! Welcome to CodeWithZuhaib Academy! 🎓 I'm here to help you with programming courses, resources, and any questions about our academy.`
+      },
+      {
+        keywords: ['courses', 'programming', 'learn', 'study'],
+        response: `🚀 We offer comprehensive courses in:\n\n• Full Stack Web Development (MERN)\n• JavaScript & TypeScript\n• React.js & Next.js\n• Node.js & Express\n• Python Programming\n• Data Structures & Algorithms\n• Web Design (HTML/CSS/Tailwind)\n• Database Management\n\nWhich course interests you most?`
+      },
+      {
+        keywords: ['free', 'resources', 'materials'],
+        response: `📚 Free Learning Resources Available:\n\n• Programming tutorials and guides\n• Code examples and projects\n• Practice exercises\n• Career guidance articles\n• Tech interview preparation\n\nVisit codewithzuhaib.vercel.app for all free resources!`
+      },
+      {
+        keywords: ['contact', 'reach', 'email', 'phone'],
+        response: `📞 Contact CodeWithZuhaib:\n\n📧 Email: Zuhaibalid@gmail.com\n🌐 Website: codewithzuhaib.vercel.app\n\nFeel free to reach out for:\n• Course inquiries\n• Technical support\n• Career guidance\n• Custom training programs`
+      },
+      {
+        keywords: ['certificate', 'certification', 'diploma'],
+        response: `🏆 Yes! We provide:\n\n• Course completion certificates\n• Industry-recognized certifications\n• Project portfolio development\n• LinkedIn skill endorsements\n\nAll our certificates are digitally verifiable and industry-standard.`
+      },
+      {
+        keywords: ['price', 'cost', 'fee', 'payment'],
+        response: `💰 Course Pricing:\n\n• Individual courses: Competitive rates\n• Bundle packages available\n• Payment plans offered\n• Scholarships for deserving students\n• Free trial lessons\n\nContact us for detailed pricing and special offers!`
+      },
+      {
+        keywords: ['instructor', 'teacher', 'zohaib', 'zuhaib'],
+        response: `👨‍💻 About Zuhaib Ali:\n\n• Full Stack Developer & Instructor\n• 5+ years industry experience\n• MERN Stack specialist\n• AI/ML enthusiast\n• Passionate educator\n\nDedicated to helping students achieve their programming goals!`
+      },
+      {
+        keywords: ['beginner', 'start', 'new', 'basic'],
+        response: `🌟 Perfect for beginners! We offer:\n\n• Step-by-step learning paths\n• Beginner-friendly projects\n• Personal mentorship\n• Practical hands-on experience\n• Career guidance\n\nStart your coding journey today with our structured programs!`
+      },
+      {
+        keywords: ['job', 'career', 'placement', 'work'],
+        response: `💼 Career Support:\n\n• Job placement assistance\n• Resume building guidance\n• Interview preparation\n• Industry connections\n• Portfolio development\n• Freelancing guidance\n\nWe help you land your dream tech job!`
+      },
+      {
+        keywords: ['online', 'offline', 'mode', 'class'],
+        response: `📺 Learning Options:\n\n• Online live sessions\n• Self-paced courses\n• Recorded lectures\n• One-on-one mentoring\n• Group projects\n• 24/7 support\n\nChoose the learning style that works best for you!`
+      },
+      {
+        keywords: ['javascript', 'js', 'react', 'node'],
+        response: `⚡ JavaScript Ecosystem:\n\n• Modern JavaScript (ES6+)\n• React.js for frontend\n• Node.js for backend\n• Express.js framework\n• MongoDB database\n• RESTful APIs\n\nMaster the complete JavaScript stack with us!`
+      },
+      {
+        keywords: ['python', 'data', 'science', 'ai', 'ml'],
+        response: `🐍 Python Programming:\n\n• Core Python fundamentals\n• Data Science with pandas\n• Machine Learning basics\n• Web scraping\n• Automation scripts\n• Django/Flask frameworks\n\nUnlock the power of Python programming!`
+      },
+      {
+        keywords: ['project', 'portfolio', 'build'],
+        response: `🔨 Project-Based Learning:\n\n• Real-world projects\n• Portfolio development\n• GitHub integration\n• Code reviews\n• Industry best practices\n• Team collaboration\n\nBuild impressive projects that showcase your skills!`
+      },
+      {
+        keywords: ['support', 'help', 'doubt', 'question'],
+        response: `🤝 Student Support:\n\n• 24/7 chat assistance\n• Weekly doubt-clearing sessions\n• Personal mentorship\n• Peer learning groups\n• Technical support\n• Career counseling\n\nWe're always here to help you succeed!`
+      },
+      {
+        keywords: ['thanks', 'thank you', 'appreciate'],
+        response: `You're most welcome! 😊 I'm glad I could help. Is there anything else you'd like to know about CodeWithZuhaib Academy?`
+      },
+      {
+        keywords: ['bye', 'goodbye', 'see you'],
+        response: `Thank you for visiting CodeWithZuhaib Academy! 👋 Feel free to reach out anytime. Happy coding! 🚀`
+      }
     ];
 
     const lowerInput = input.toLowerCase();
+    
+    // Check for keyword matches
     for (const { keywords, response } of responses) {
       if (keywords.some(keyword => lowerInput.includes(keyword))) {
         return response;
       }
     }
-    // Your existing response logic here
-    return "I'm here to help! Feel free to ask any questions. 🤖";
+
+    // Default response
+    return `I'd be happy to help you! 🤖 I can assist with:\n\n• Course information\n• Learning resources\n• Contact details\n• Career guidance\n• Technical support\n\nWhat would you like to know about CodeWithZuhaib Academy?`;
   };
 
   return (
-   <div className="fixed bottom-4 right-4 z-50 flex flex-col items-end">
+    <div className="fixed bottom-4 right-4 z-50 flex flex-col items-end">
       {/* Chat Window */}
       {isOpen && (
-        <div className="w-full max-w-[95vw] sm:w-[360px] h-[80vh] sm:h-[520px] bg-white rounded-2xl shadow-2xl flex flex-col overflow-hidden animate-slideUp m-1">
+        <div className="w-full max-w-[95vw] sm:w-[400px] lg:w-[450px] h-[85vh] sm:h-[600px] bg-white rounded-3xl shadow-2xl flex flex-col overflow-hidden animate-slideUp m-2 border border-gray-200">
           {/* Header */}
-          <div className="bg-gradient-to-r from-blue-600 to-purple-600 p-4 text-white">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <Bot size={24} />
-                <div>
-                  <h3 className="font-bold">AI Assistant</h3>
-                  <p className="text-sm opacity-90">Online</p>
+          <div className="bg-gradient-to-r from-indigo-600 via-purple-600 to-blue-600 p-4 text-white relative overflow-hidden">
+            <div className="absolute inset-0 bg-white/10 backdrop-blur-sm"></div>
+            <div className="relative z-10">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="relative">
+                    <div className="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center backdrop-blur-sm">
+                      <Bot size={24} />
+                    </div>
+                    <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-green-400 rounded-full border-2 border-white"></div>
+                  </div>
+                  <div>
+                    <h3 className="font-bold text-lg">CodeWithZuhaib Assistant</h3>
+                    <p className="text-sm opacity-90 flex items-center gap-1">
+                      <span className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></span>
+                      Always Online
+                    </p>
+                  </div>
                 </div>
+                <button
+                  onClick={handleToggle}
+                  className="p-2 hover:bg-white/20 rounded-full transition-colors duration-200"
+                >
+                  <X size={22} />
+                </button>
               </div>
-              <button
-                onClick={handleToggle}
-                className="p-1 hover:bg-white/20 rounded-full transition-colors"
-              >
-                <X size={20} />
-              </button>
             </div>
           </div>
 
           {/* Chat Content */}
-          <div className="flex-1 overflow-y-auto p-1 bg-gray-50">
+          <div className="flex-1 overflow-y-auto bg-gradient-to-b from-gray-50 to-white">
             {showNameInput ? (
-              <div className="flex flex-col items-center justify-center h-full gap-2 p-1">
-                <Bot size={48} className="text-blue-600" />
-                <h2 className="text-xl font-semibold text-gray-800">Welcome! 👋</h2>
-                <p className="text-gray-600 text-center">Please enter your name to start chatting</p>
-                <div className="w-full max-w-sm flex gap-2">
+              <div className="flex flex-col items-center justify-center h-full gap-4 p-6">
+                <div className="text-center">
+                  <div className="w-20 h-20 bg-gradient-to-r from-indigo-600 to-purple-600 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <Bot size={36} className="text-white" />
+                  </div>
+                  <h2 className="text-2xl font-bold text-gray-800 mb-2">Welcome to CodeWithZuhaib!</h2>
+                  <p className="text-gray-600 text-center leading-relaxed">
+                    Your premier coding academy for mastering modern programming skills
+                  </p>
+                </div>
+                <div className="w-full max-w-sm">
                   <input
                     type="text"
                     value={userInput}
                     onChange={(e) => setUserInput(e.target.value)}
-                    placeholder="Your name..."
-                    className="flex-1 px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    placeholder="Enter your name to get started..."
+                    className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-200"
                     onKeyPress={(e) => e.key === 'Enter' && handleNameSubmit()}
                   />
                   <button
                     onClick={handleNameSubmit}
-                    className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                    disabled={!userInput.trim()}
+                    className="w-full mt-3 px-6 py-3 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-xl font-semibold hover:shadow-lg transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
                   >
-                    Start
+                    Start Learning Journey
                   </button>
                 </div>
               </div>
             ) : (
-              <>
+              <div className="p-4">
+                {/* Quick Actions */}
+                {showQuickActions && (
+                  <div className="mb-4 p-3 bg-white rounded-2xl shadow-sm border border-gray-100">
+                    <h4 className="text-sm font-semibold text-gray-700 mb-3">Quick Actions</h4>
+                    <div className="grid grid-cols-2 gap-2">
+                      {quickActions.map((action, index) => (
+                        <button
+                          key={index}
+                          onClick={() => handleQuickAction(action.action)}
+                          className="flex items-center gap-2 p-2 text-xs bg-gray-50 hover:bg-gray-100 rounded-lg transition-colors duration-200"
+                        >
+                          <action.icon size={14} className="text-indigo-600" />
+                          <span className="truncate">{action.text}</span>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Messages */}
                 {messages.map((message, index) => (
-                 <div
+                  <div
                     key={index}
-                    className={`flex mb-2 ${message.sender === 'user' ? 'justify-end' : 'justify-start'}`}
+                    className={`flex mb-4 ${message.sender === 'user' ? 'justify-end' : 'justify-start'}`}
                   >
                     <div
-                      className={`max-w-[90%] sm:max-w-[80%] p-2 sm:p-3 rounded-2xl ${
+                      className={`max-w-[85%] relative ${
                         message.sender === 'user'
-                          ? 'bg-blue-600 text-white'
-                          : 'bg-white text-gray-800 shadow-sm'
+                          ? 'bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-2xl rounded-br-md'
+                          : 'bg-white text-gray-800 shadow-sm border border-gray-100 rounded-2xl rounded-bl-md'
                       }`}
                     >
-                      {message.file ? (
-                        <div className="max-w-[200px]">
-                          <img
-                            src={message.file}
-                            alt="Uploaded content"
-                            className="rounded-lg object-cover w-full h-auto"
-                            loading="lazy"
-                          />
-                          <p className="text-xs mt-1 truncate">{message.text}</p>
-                        </div>
-                      ) : (
-                        <p className="text-sm sm:text-base">{message.text}</p>
-                      )}
-                      <p className={`text-xs mt-1 ${
-                        message.sender === 'user' ? 'text-blue-100' : 'text-gray-500'
+                      <div className="p-3">
+                        {message.file ? (
+                          <div className="max-w-[250px]">
+                            <img
+                              src={message.file}
+                              alt="Uploaded content"
+                              className="rounded-lg object-cover w-full h-auto mb-2"
+                              loading="lazy"
+                            />
+                            <p className="text-sm">{message.text}</p>
+                          </div>
+                        ) : (
+                          <p className="text-sm leading-relaxed whitespace-pre-line">{message.text}</p>
+                        )}
+                      </div>
+                      <div className={`px-3 pb-2 ${
+                        message.sender === 'user' ? 'text-indigo-100' : 'text-gray-500'
                       }`}>
-                        {message.time.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                      </p>
+                        <p className="text-xs">
+                          {message.time.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                        </p>
+                      </div>
                     </div>
                   </div>
                 ))}
+
+                {/* Typing Indicator */}
                 {isTyping && (
                   <div className="flex mb-4">
-                    <div className="bg-white p-4 rounded-2xl shadow-sm">
+                    <div className="bg-white p-4 rounded-2xl rounded-bl-md shadow-sm border border-gray-100">
                       <div className="flex space-x-2">
-                        <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0s' }}></div>
-                        <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
-                        <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
+                        <div className="w-2 h-2 bg-indigo-400 rounded-full animate-bounce" style={{ animationDelay: '0s' }}></div>
+                        <div className="w-2 h-2 bg-indigo-400 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
+                        <div className="w-2 h-2 bg-indigo-400 rounded-full animate-bounce" style={{ animationDelay: '0.4s' }}></div>
                       </div>
                     </div>
                   </div>
                 )}
                 <div ref={messagesEndRef} />
-              </>
+              </div>
             )}
           </div>
 
           {/* Input Area */}
           {!showNameInput && (
-             <div className="p-1 sm:p-2 bg-white border-t">
-              <div className="flex gap-1 sm:gap-2 items-center">
-                <input
-                  type="text"
-                  value={userInput}
-                  onChange={(e) => setUserInput(e.target.value)}
-                  onKeyPress={(e) => e.key === 'Enter' && handleSendMessage()}
-                  placeholder="Type your message..."
-                  className="flex-1 px-2 sm:px-4 py-1 sm:py-2 border rounded-full focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm sm:text-base"
+            <div className="p-4 bg-white border-t border-gray-100">
+              {/* Quick Actions Toggle */}
+              <button
+                onClick={() => setShowQuickActions(!showQuickActions)}
+                className="w-full mb-3 p-2 text-sm text-gray-600 hover:text-gray-800 bg-gray-50 hover:bg-gray-100 rounded-lg transition-colors duration-200 flex items-center justify-center gap-2"
+              >
+                Quick Actions
+                <ChevronDown 
+                  size={16} 
+                  className={`transform transition-transform duration-200 ${showQuickActions ? 'rotate-180' : ''}`}
                 />
-                <button
-                  onClick={handleVoiceInput}
-                  className={`p-1 sm:p-2 rounded-full transition-colors ${
-                    isListening ? 'bg-red-500' : 'bg-gray-200 hover:bg-gray-300'
-                  }`}
-                >
-                  <Mic size={18} className="w-4 h-4 sm:w-5 sm:h-5" />
-                </button>
-                <label className="p-1 sm:p-2 bg-gray-200 rounded-full hover:bg-gray-300 transition-colors cursor-pointer">
-                  <Upload size={18} className="w-4 h-4 sm:w-5 sm:h-5" />
+              </button>
+
+              <div className="flex gap-2 items-end">
+                <div className="flex-1">
                   <input
-                    type="file"
-                    className="hidden"
-                    onChange={handleFileUpload}
-                    accept="image/*"
+                    type="text"
+                    value={userInput}
+                    onChange={(e) => setUserInput(e.target.value)}
+                    onKeyPress={(e) => e.key === 'Enter' && handleSendMessage()}
+                    placeholder="Ask about courses, resources, pricing..."
+                    className="w-full px-4 py-3 border border-gray-200 rounded-2xl focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-200 text-sm resize-none"
+                    style={{ minHeight: '48px' }}
                   />
-                </label>
-                <button
-                  onClick={handleSendMessage}
-                  className="p-1 sm:p-2 bg-blue-600 text-white rounded-full hover:bg-blue-700 transition-colors"
-                >
-                  <Send size={18} className="w-4 h-4 sm:w-5 sm:h-5" />
-                </button>
-              </div>
-              {file && (
-                <div className="mt-1 flex items-center gap-1 text-xs sm:text-sm">
-                  <span className="truncate">{file.name}</span>
+                  {file && (
+                    <div className="mt-2 flex items-center gap-2 p-2 bg-gray-50 rounded-lg">
+                      <span className="text-xs text-gray-600 truncate flex-1">{file.name}</span>
+                      <button
+                        onClick={() => setFile(null)}
+                        className="text-red-500 hover:text-red-700 p-1"
+                      >
+                        <X size={14} />
+                      </button>
+                    </div>
+                  )}
+                </div>
+                
+                <div className="flex gap-2">
                   <button
-                    onClick={() => setFile(null)}
-                    className="text-red-500 hover:text-red-700"
+                    onClick={handleVoiceInput}
+                    className={`p-3 rounded-2xl transition-all duration-200 ${
+                      isListening 
+                        ? 'bg-red-500 text-white animate-pulse' 
+                        : 'bg-gray-100 hover:bg-gray-200 text-gray-600'
+                    }`}
                   >
-                    <X size={14} />
+                    <Mic size={18} />
+                  </button>
+                  
+                  <label className="p-3 bg-gray-100 hover:bg-gray-200 text-gray-600 rounded-2xl cursor-pointer transition-all duration-200">
+                    <Upload size={18} />
+                    <input
+                      type="file"
+                      className="hidden"
+                      onChange={handleFileUpload}
+                      accept="image/*,.pdf,.doc,.docx"
+                    />
+                  </label>
+                  
+                  <button
+                    onClick={() => handleSendMessage()}
+                    disabled={!userInput.trim() && !file}
+                    className="p-3 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-2xl hover:shadow-lg transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    <Send size={18} />
                   </button>
                 </div>
-              )}
+              </div>
             </div>
           )}
         </div>
@@ -527,34 +457,42 @@ const Chatbot = () => {
       {/* Floating Button */}
       <button
         onClick={handleToggle}
-        className="relative group"
+        className="relative group transform hover:scale-105 transition-all duration-300"
       >
-        <div className="w-16 h-16 bg-gradient-to-r from-blue-600 to-purple-600 rounded-full shadow-lg flex items-center justify-center text-white hover:shadow-xl transition-all duration-300">
+        <div className="w-16 h-16 bg-gradient-to-r from-indigo-600 via-purple-600 to-blue-600 rounded-full shadow-2xl flex items-center justify-center text-white hover:shadow-indigo-500/25 transition-all duration-300 relative overflow-hidden">
+          <div className="absolute inset-0 bg-white/20 rounded-full animate-ping opacity-30"></div>
           {isOpen ? (
-            <X size={24} />
+            <X size={24} className="relative z-10" />
           ) : (
-            <MessageCircle size={24} />
+            <MessageCircle size={24} className="relative z-10" />
           )}
         </div>
 
         {/* Unread Count Badge */}
         {!isOpen && unreadCount > 0 && (
-          <div className="absolute -top-2 -right-2 w-6 h-6 bg-red-500 text-white rounded-full flex items-center justify-center text-sm font-bold">
-            {unreadCount}
+          <div className="absolute -top-2 -right-2 w-6 h-6 bg-red-500 text-white rounded-full flex items-center justify-center text-sm font-bold animate-bounce">
+            {unreadCount > 9 ? '9+' : unreadCount}
           </div>
         )}
 
-        {/* Tooltip */}
+        {/* Enhanced Tooltip */}
         {!isOpen && (
-          <div className="absolute bottom-full right-0 mb-2 pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity">
-            <div className="bg-gray-800 text-white px-3 py-1 rounded-lg text-sm whitespace-nowrap">
-              Chat with DotZohaib
+          <div className="absolute bottom-full right-0 mb-3 pointer-events-none opacity-0 group-hover:opacity-100 transition-all duration-300 transform group-hover:-translate-y-1">
+            <div className="bg-gray-900 text-white px-4 py-2 rounded-2xl text-sm whitespace-nowrap relative">
+              <div className="flex items-center gap-2">
+                <Code size={16} />
+                <span>Chat with CodeWithZuhaib</span>
+              </div>
+              <div className="absolute top-full left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-gray-900"></div>
             </div>
           </div>
         )}
+
+        {/* Pulse Effect */}
+        <div className="absolute inset-0 rounded-full bg-gradient-to-r from-indigo-600 to-purple-600 opacity-30 animate-pulse"></div>
       </button>
     </div>
   );
 };
 
-export default Chatbot;
+export default ProfessionalChatbot;
