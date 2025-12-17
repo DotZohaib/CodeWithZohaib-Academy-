@@ -824,6 +824,548 @@ const Next: React.FC = () => {
   // Import styles in pages/_app.tsx
   import '../styles/globals.css';`,
     },
+     {
+      id: 46,
+      Title: "SignUp Authentication in Next.js?",
+      answer: "This is full Authentication also store in local storage Next.js.",
+      code: `/* eslint-disable @typescript-eslint/no-unused-vars */
+"use client"
+import React, { useState, useEffect } from 'react';
+
+// ===========================
+// TYPE DEFINITIONS
+// ===========================
+
+interface FormData {
+  name: string;
+  email: string;
+  number: string;
+  password: string;
+}
+
+interface AddressFormData {
+  country: string;
+  city: string;
+  cityCode: string;
+  description: string;
+}
+
+interface UserData extends FormData, AddressFormData {
+  otp: string;
+}
+
+interface FormErrors {
+  [key: string]: string;
+}
+
+interface StepProps {
+  onNext: () => void;
+  onBack?: () => void;
+}
+
+interface MainProps {
+  onReset: () => void;
+}
+
+type CountryName = 'Pakistan' | 'USA' | 'Japan';
+type CityData = Record<CountryName, string[]>;
+type ValidCityCodes = Record<CountryName, Record<string, string[]>>;
+
+// ===========================
+// HOME COMPONENT - STEP 1
+// ===========================
+
+const Home: React.FC<StepProps> = ({ onNext }) => {
+  const [formData, setFormData] = useState<FormData>({
+    name: '',
+    email: '',
+    number: '',
+    password: ''
+  });
+  const [errors, setErrors] = useState<FormErrors>({});
+
+  const validateEmail = (email: string): boolean => {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return emailRegex.test(email);
+  };
+
+  const validatePhone = (phone: string): boolean => {
+    return phone.length === 11 && /^\d+$/.test(phone);
+  };
+
+  const validatePassword = (password: string): boolean => {
+    if (password.length < 8 || password.length > 16) return false;
+    const hasUpper = /[A-Z]/.test(password);
+    const hasLower = /[a-z]/.test(password);
+    const hasNumber = /\d/.test(password);
+    const hasSymbol = /[!@#$%^&*(),.?":{}|<>]/.test(password);
+    return hasUpper && hasLower && hasNumber && hasSymbol;
+  };
+
+  const handleSubmit = (e: React.FormEvent<HTMLFormElement>): void => {
+    e.preventDefault();
+    const newErrors: FormErrors = {};
+
+    if (!formData.name.trim()) {
+      newErrors.name = 'Name is required';
+    }
+
+    if (!validateEmail(formData.email)) {
+      newErrors.email = 'Invalid email format';
+    }
+
+    if (!validatePhone(formData.number)) {
+      newErrors.number = 'Phone number must be exactly 11 digits';
+    }
+
+    if (!validatePassword(formData.password)) {
+      newErrors.password = 'Password must be 8-16 characters with uppercase, lowercase, number, and symbol';
+    }
+
+    if (Object.keys(newErrors).length > 0) {
+      setErrors(newErrors);
+      return;
+    }
+
+    localStorage.setItem('userData', JSON.stringify(formData));
+    onNext();
+  };
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>): void => {
+    const { name, value } = e.target;
+    setFormData(prev => ({ ...prev, [name]: value }));
+    if (errors[name]) {
+      setErrors(prev => {
+        const newErrors = { ...prev };
+        delete newErrors[name];
+        return newErrors;
+      });
+    }
+  };
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-4">
+      <div className="bg-white rounded-lg shadow-xl p-8 w-full max-w-md">
+        <h2 className="text-3xl font-bold text-gray-800 mb-6 text-center">Sign Up</h2>
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div>
+            <input
+              type="text"
+              name="name"
+              value={formData.name}
+              onChange={handleChange}
+              placeholder="Enter Your Name"
+              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
+            />
+            {errors.name && <p className="text-red-500 text-sm mt-1">{errors.name}</p>}
+          </div>
+
+          <div>
+            <input
+              type="email"
+              name="email"
+              value={formData.email}
+              onChange={handleChange}
+              placeholder="Enter Your Email"
+              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
+            />
+            {errors.email && <p className="text-red-500 text-sm mt-1">{errors.email}</p>}
+          </div>
+
+          <div>
+            <input
+              type="text"
+              name="number"
+              value={formData.number}
+              onChange={handleChange}
+              placeholder="Enter Your Phone (11 digits)"
+              maxLength={11}
+              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
+            />
+            {errors.number && <p className="text-red-500 text-sm mt-1">{errors.number}</p>}
+          </div>
+
+          <div>
+            <input
+              type="password"
+              name="password"
+              value={formData.password}
+              onChange={handleChange}
+              placeholder="Enter Your Password"
+              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
+            />
+            {errors.password && <p className="text-red-500 text-sm mt-1">{errors.password}</p>}
+            <p className="text-xs text-gray-500 mt-1">8-16 chars, uppercase, lowercase, number & symbol</p>
+          </div>
+
+          <button
+            type="submit"
+            className="w-full bg-blue-600 text-white py-3 rounded-lg font-semibold hover:bg-blue-700 transition duration-200"
+          >
+            Next Step
+          </button>
+        </form>
+      </div>
+    </div>
+  );
+};
+
+// ===========================
+// ADDRESS COMPONENT - STEP 2
+// ===========================
+
+const Address: React.FC<StepProps> = ({ onNext, onBack }) => {
+  const [formData, setFormData] = useState<AddressFormData>({
+    country: 'Pakistan',
+    city: '',
+    cityCode: '',
+    description: ''
+  });
+  const [errors, setErrors] = useState<FormErrors>({});
+
+  const cityData: CityData = {
+    Pakistan: ['Sindh', 'Punjab', 'Balochistan', 'KPK'],
+    USA: ['California', 'Texas', 'Florida', 'New York'],
+    Japan: ['Tokyo', 'Osaka', 'Kyoto', 'Hokkaido']
+  };
+
+  const validCityCodes: ValidCityCodes = {
+    Pakistan: {
+      Sindh: ['75000', '75100', '75200', '75300', '75400'],
+      Punjab: ['54000', '54100', '54200', '54300', '54400'],
+      Balochistan: ['87000', '87100', '87200', '87300', '87400'],
+      KPK: ['25000', '25100', '25200', '25300', '25400']
+    },
+    USA: {
+      California: ['90001', '90210', '94102', '94103', '94104'],
+      Texas: ['75001', '77001', '78701', '78702', '78703'],
+      Florida: ['32801', '33101', '33102', '33103', '33104'],
+      'New York': ['10001', '10002', '10003', '10004', '10005']
+    },
+    Japan: {
+      Tokyo: ['10001', '10002', '10003', '10004', '10005'],
+      Osaka: ['53001', '53002', '53003', '53004', '53005'],
+      Kyoto: ['60001', '60002', '60003', '60004', '60005'],
+      Hokkaido: ['06001', '06002', '06003', '06004', '06005']
+    }
+  };
+
+  useEffect(() => {
+    if (formData.country) {
+      const country = formData.country as CountryName;
+      setFormData(prev => ({ 
+        ...prev, 
+        city: cityData[country][0], 
+        cityCode: '' 
+      }));
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [formData.country]);
+
+  const validateCityCode = (code: string): boolean => {
+    if (code.length !== 5 || !/^\d+$/.test(code)) return false;
+    const country = formData.country as CountryName;
+    const validCodes = validCityCodes[country]?.[formData.city] || [];
+    return validCodes.includes(code);
+  };
+
+  const handleSubmit = (e: React.FormEvent<HTMLFormElement>): void => {
+    e.preventDefault();
+    const newErrors: FormErrors = {};
+
+    if (!formData.city) {
+      newErrors.city = 'Please select a city';
+    }
+
+    if (!validateCityCode(formData.cityCode)) {
+      const country = formData.country as CountryName;
+      newErrors.cityCode = `Invalid city code for ${formData.city}. Valid codes: ${validCityCodes[country]?.[formData.city]?.join(', ')}`;
+    }
+
+    if (Object.keys(newErrors).length > 0) {
+      setErrors(newErrors);
+      return;
+    }
+
+    const existingData = JSON.parse(localStorage.getItem('userData') || '{}');
+    localStorage.setItem('userData', JSON.stringify({ ...existingData, ...formData }));
+    onNext();
+  };
+
+  const handleChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>
+  ): void => {
+    const { name, value } = e.target;
+    setFormData(prev => ({ ...prev, [name]: value }));
+    if (errors[name]) {
+      setErrors(prev => {
+        const newErrors = { ...prev };
+        delete newErrors[name];
+        return newErrors;
+      });
+    }
+  };
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-green-50 to-teal-100 flex items-center justify-center p-4">
+      <div className="bg-white rounded-lg shadow-xl p-8 w-full max-w-md">
+        <h2 className="text-3xl font-bold text-gray-800 mb-6 text-center">Address Details</h2>
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div>
+            <select
+              name="country"
+              value={formData.country}
+              onChange={handleChange}
+              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent outline-none"
+            >
+              <option value="Pakistan">Pakistan</option>
+              <option value="USA">USA</option>
+              <option value="Japan">Japan</option>
+            </select>
+          </div>
+
+          <div>
+            <select
+              name="city"
+              value={formData.city}
+              onChange={handleChange}
+              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent outline-none"
+            >
+              {cityData[formData.country as CountryName].map((city: string) => (
+                <option key={city} value={city}>{city}</option>
+              ))}
+            </select>
+            {errors.city && <p className="text-red-500 text-sm mt-1">{errors.city}</p>}
+          </div>
+
+          <div>
+            <input
+              type="text"
+              name="cityCode"
+              value={formData.cityCode}
+              onChange={handleChange}
+              placeholder="Enter City Code (5 digits)"
+              maxLength={5}
+              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent outline-none"
+            />
+            {errors.cityCode && <p className="text-red-500 text-sm mt-1">{errors.cityCode}</p>}
+          </div>
+
+          <div>
+            <textarea
+              name="description"
+              value={formData.description}
+              onChange={handleChange}
+              placeholder="Enter Your Issues (Optional)"
+              rows={4}
+              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent outline-none resize-none"
+            />
+          </div>
+
+          <div className="flex gap-3">
+            <button
+              type="button"
+              onClick={onBack}
+              className="flex-1 bg-gray-400 text-white py-3 rounded-lg font-semibold hover:bg-gray-500 transition duration-200"
+            >
+              Back
+            </button>
+            <button
+              type="submit"
+              className="flex-1 bg-green-600 text-white py-3 rounded-lg font-semibold hover:bg-green-700 transition duration-200"
+            >
+              Next Step
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+};
+
+// ===========================
+// OTP COMPONENT - STEP 3
+// ===========================
+
+const Otp: React.FC<StepProps> = ({ onNext, onBack }) => {
+  const [otp, setOtp] = useState<string>('');
+  const [error, setError] = useState<string>('');
+
+  const handleSubmit = (e: React.FormEvent<HTMLFormElement>): void => {
+    e.preventDefault();
+    
+    if (otp.length !== 4 || !/^\d+$/.test(otp)) {
+      setError('OTP must be exactly 4 digits');
+      return;
+    }
+
+    const existingData = JSON.parse(localStorage.getItem('userData') || '{}');
+    localStorage.setItem('userData', JSON.stringify({ ...existingData, otp }));
+    onNext();
+  };
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>): void => {
+    const value = e.target.value;
+    if (value.length <= 4) {
+      setOtp(value);
+      setError('');
+    }
+  };
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-purple-50 to-pink-100 flex items-center justify-center p-4">
+      <div className="bg-white rounded-lg shadow-xl p-8 w-full max-w-md">
+        <h2 className="text-3xl font-bold text-gray-800 mb-6 text-center">Verify OTP</h2>
+        <p className="text-gray-600 text-center mb-6">Enter the 4-digit verification code</p>
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div>
+            <input
+              type="text"
+              value={otp}
+              onChange={handleChange}
+              placeholder="Enter 4-Digit OTP"
+              maxLength={4}
+              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none text-center text-2xl tracking-widest"
+            />
+            {error && <p className="text-red-500 text-sm mt-1 text-center">{error}</p>}
+          </div>
+
+          <div className="flex gap-3">
+            <button
+              type="button"
+              onClick={onBack}
+              className="flex-1 bg-gray-400 text-white py-3 rounded-lg font-semibold hover:bg-gray-500 transition duration-200"
+            >
+              Back
+            </button>
+            <button
+              type="submit"
+              className="flex-1 bg-purple-600 text-white py-3 rounded-lg font-semibold hover:bg-purple-700 transition duration-200"
+            >
+              Verify
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+};
+
+// ===========================
+// MAIN COMPONENT - SUCCESS PAGE
+// ===========================
+
+const Main: React.FC<MainProps> = ({ onReset }) => {
+  const [userData, setUserData] = useState<Partial<UserData> | null>(null);
+
+  useEffect(() => {
+    const data = JSON.parse(localStorage.getItem('userData') || '{}');
+    setUserData(data);
+  }, []);
+
+  if (!userData) return null;
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-emerald-50 to-cyan-100 flex items-center justify-center p-4">
+      <div className="bg-white rounded-lg shadow-xl p-8 w-full max-w-2xl">
+        <div className="text-center mb-8">
+          <div className="w-20 h-20 bg-green-500 rounded-full flex items-center justify-center mx-auto mb-4">
+            <svg className="w-12 h-12 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
+            </svg>
+          </div>
+          <h2 className="text-3xl font-bold text-gray-800 mb-2">Registration Successful!</h2>
+          <p className="text-gray-600">Your account has been created successfully</p>
+        </div>
+
+        <div className="bg-gray-50 rounded-lg p-6 space-y-4">
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <p className="text-sm text-gray-500">Name</p>
+              <p className="font-semibold text-gray-800">{userData.name || 'N/A'}</p>
+            </div>
+            <div>
+              <p className="text-sm text-gray-500">Email</p>
+              <p className="font-semibold text-gray-800">{userData.email || 'N/A'}</p>
+            </div>
+            <div>
+              <p className="text-sm text-gray-500">Phone Number</p>
+              <p className="font-semibold text-gray-800">{userData.number || 'N/A'}</p>
+            </div>
+            <div>
+              <p className="text-sm text-gray-500">Password</p>
+              <p className="font-semibold text-gray-800">{'*'.repeat(userData.password?.length || 0)}</p>
+            </div>
+            <div>
+              <p className="text-sm text-gray-500">Country</p>
+              <p className="font-semibold text-gray-800">{userData.country || 'N/A'}</p>
+            </div>
+            <div>
+              <p className="text-sm text-gray-500">City</p>
+              <p className="font-semibold text-gray-800">{userData.city || 'N/A'}</p>
+            </div>
+            <div>
+              <p className="text-sm text-gray-500">City Code</p>
+              <p className="font-semibold text-gray-800">{userData.cityCode || 'N/A'}</p>
+            </div>
+            <div>
+              <p className="text-sm text-gray-500">OTP Verified</p>
+              <p className="font-semibold text-gray-800">{userData.otp || 'N/A'}</p>
+            </div>
+          </div>
+          {userData.description && (
+            <div>
+              <p className="text-sm text-gray-500">Description</p>
+              <p className="font-semibold text-gray-800">{userData.description}</p>
+            </div>
+          )}
+        </div>
+
+        <button
+          onClick={onReset}
+          className="w-full mt-6 bg-blue-600 text-white py-3 rounded-lg font-semibold hover:bg-blue-700 transition duration-200"
+        >
+          Start New Registration
+        </button>
+      </div>
+    </div>
+  );
+};
+
+// ===========================
+// APP COMPONENT - MAIN ROUTER
+// ===========================
+
+const App: React.FC = () => {
+  const [currentStep, setCurrentStep] = useState<number>(1);
+
+  const handleReset = (): void => {
+    localStorage.removeItem('userData');
+    setCurrentStep(1);
+  };
+
+  return (
+    <>
+      {currentStep === 1 && <Home onNext={() => setCurrentStep(2)} />}
+      {currentStep === 2 && (
+        <Address 
+          onNext={() => setCurrentStep(3)} 
+          onBack={() => setCurrentStep(1)} 
+        />
+      )}
+      {currentStep === 3 && (
+        <Otp 
+          onNext={() => setCurrentStep(4)} 
+          onBack={() => setCurrentStep(2)} 
+        />
+      )}
+      {currentStep === 4 && <Main onReset={handleReset} />}
+    </>
+  );
+};
+
+export default App;`,
+    },
   ];
 
   const categories: Categories = {
@@ -1032,3 +1574,4 @@ const Next: React.FC = () => {
 };
 
 export default Next;
+
