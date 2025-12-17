@@ -824,7 +824,7 @@ const Next: React.FC = () => {
   // Import styles in pages/_app.tsx
   import '../styles/globals.css';`,
     },
-   {
+    {
       id: 46,
       Title: "SignUp Authentication in Next.js?",
       answer: "This is full Authentication also store in local storage Next.js.",
@@ -1580,6 +1580,3 @@ export default App;
 };
 
 export default Next;
-
-
-
