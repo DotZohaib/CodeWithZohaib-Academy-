@@ -828,6 +828,7 @@ const Next: React.FC = () => {
       id: 46,
       Title: "SignUp Authentication in Next.js?",
       answer: "This is full Authentication also store in local storage Next.js.",
+      Sample: "Complete SignUp Form with Validation",
       code: `// "use client"
 import React, { useState, useEffect } from 'react';
 
